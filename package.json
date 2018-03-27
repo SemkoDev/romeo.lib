@@ -1,0 +1,40 @@
+{
+  "name": "romeo.lib",
+  "version": "0.0.1",
+  "description": "Romeo protocol library for IOTA",
+  "main": "dist/index.js",
+  "homepage": "https://semkodev.com",
+  "author": "Roman Semko <roman@deviota.com> (http://twitter.com/RomanSemko)",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SemkoDev/romeo.lib.git"
+  },
+  "files": ["src", "dist", "README.md", "LICENSE.md"],
+  "keywords": ["blockchain", "IOTA", "tangle", "p2p"],
+  "scripts": {
+    "test": "mocha --timeout 120000 --bail --ui bdd $(find src -name \"*.test.js\")",
+    "clean": "rimraf dist",
+    "fix": "prettier --single-quote --write index.js src/*.{js} src/**/*.{js} package.json *.md",
+    "dist": "parcel build src/index.js --out-dir dist",
+    "make": "npm run clean && npm run fix && npm run dist"
+  },
+  "dependencies": {
+    "better-queue": "^3.8.6",
+    "iota.lib.js": "^0.4.7",
+    "is-online": "^7.0.0",
+    "mocha": "^5.0.4",
+    "password-validator": "^4.0.0",
+    "pouchdb": "^6.4.3",
+    "rimraf": "^2.6.2",
+    "sha.js": "^2.4.10",
+    "tmp": "^0.0.33"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-es2015": "^6.24.1",
+    "chai": "^4.1.2",
+    "parcel-bundler": "^1.6.2",
+    "prettier": "^1.11.1"
+  }
+}
