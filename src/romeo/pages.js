@@ -22,6 +22,13 @@ class Pages extends BasePage {
     this.getNewPage = this.getNewAddress;
   }
 
+  asJson () {
+    return Object.values(this.pages).map((p) => {
+      const { address, seed, keyIndex, page } = p;
+      return { address, seed, keyIndex, page: page.asJson() }
+    });
+  }
+
   getAllJobs () {
     return Object.values(this.opts.queue.jobs)
       .filter(j => Number.isInteger(j.opts && j.opts.page))
@@ -51,14 +58,16 @@ class Pages extends BasePage {
           page
         };
 
-        page.init();
+        page.init()
       }
     });
     this.onChange();
   }
 
   getCurrent () {
-    return Object.values(this.pages).find(p => p.isCurrent());
+    const currentPage = Object.values(this.pages)
+      .find(p => p.page.isCurrent());
+    return currentPage ? currentPage.page : null
   }
 
   getByAddress (pageAddress) {
@@ -67,7 +76,10 @@ class Pages extends BasePage {
   }
 
   async syncCurrentPage (priority = 30) {
-    return await (this.getCurrent()).sync(true, priority);
+    const currentPage = this.getCurrent();
+    return currentPage
+      ? await currentPage.sync(true, priority)
+      : null;
   }
 }
 

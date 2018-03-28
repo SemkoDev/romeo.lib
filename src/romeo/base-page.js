@@ -29,6 +29,15 @@ class BasePage extends Base {
     return this;
   }
 
+  asJson () {
+    const { index, isCurrent, seed } = this.opts;
+    return {
+      index, isCurrent, seed,
+      addresses: this.addresses,
+      jobs: this.getJobs()
+    }
+  }
+
   applyAddresses (addresses) {
     const startIndex = Object.keys(this.addresses).length;
     addresses.forEach((address, keyIndex) => {
@@ -114,7 +123,7 @@ class BasePage extends Base {
             if (err) {
               return reject(err);
             }
-            const missingAddresses = cached.filter(c => !addresses.has(c));
+            const missingAddresses = cached.filter(c => !addresses.includes(c));
             if (missingAddresses.length) {
               await this.restoreAddresses(missingAddresses);
             }

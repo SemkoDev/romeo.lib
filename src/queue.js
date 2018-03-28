@@ -1,4 +1,5 @@
 const Queue = require('better-queue');
+const MemoryStore = require('better-queue-memory');
 const { createIdentifier } = require('./utils');
 
 const DEFAULT_OPTIONS = {
@@ -16,6 +17,7 @@ function createQueue(options) {
       .then((result) => cb(null, result))
       .catch((error) => cb(error, null));
   }, {
+    store: new MemoryStore({}),
     id: 'id',
     priority: (job, cb)  => cb(null, job.priority || 1),
     maxRetries: 5,

@@ -1,4 +1,6 @@
-const PouchDB = require('pouchdb');
+const PouchDB = typeof window === 'object'
+  ? require('pouchdb').default
+  : require('pouchdb');
 const { toTrytes } = require('iota.lib.js/lib/utils/asciiToTrytes');
 const { isTrytes } = require('iota.lib.js/lib/utils/inputValidator');
 const crypto = require('./crypto');

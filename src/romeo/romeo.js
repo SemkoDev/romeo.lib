@@ -38,6 +38,10 @@ class Romeo extends Base {
       await this.db.restore(data, true);
     }
     await this.pages.init();
+    if (!Object.keys(this.pages.pages).length) {
+      await this.pages.getNewPage();
+      await this.pages.getCurrent().getNewAddress()
+    }
     this.updater = setInterval(
       () => this.pages.syncCurrentPage(),
       this.opts.syncInterval
@@ -54,6 +58,16 @@ class Romeo extends Base {
       return this.backupDatabase();
     }
     return true;
+  }
+
+  asJson () {
+    const { queue : { jobs }, keys, pages } = this;
+    return {
+      keys,
+      jobs: Object.values(jobs),
+      genericJobs: pages.getJobs(),
+      pages: pages.asJson()
+    }
   }
 
   async backupDatabase () {
