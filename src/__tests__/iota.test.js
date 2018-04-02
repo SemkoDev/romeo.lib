@@ -12,34 +12,39 @@ process.on('unhandledRejection', (reason, p) => {
 describe('api.iota', () => {
   const keys = crypto.keys.getKeys('Maximilian', 'Mustermann999!');
 
-  it('should get trytes correctly', (done) => {
+  it('should get trytes correctly', done => {
     const iota = createAPI({
       path: tmp.dirSync().name,
       password: keys.password
     });
 
-    iota.api.getTrytes([
-      'UWQEJXPDDGZW9KTRL9ROG9YOWIHYRBVGCNVHBAHVGHKFSQJBPJGWDJXPOYLLOC9AADSJGSSKUTIYA9999'
-    ], (e, trytes) => {
-      expect(e).to.be.null;
-
-      iota.api.getTrytes([
-        'JECMCOQ9ZBHIKFQVWX9RHAFQNZWQBTZEZVNYASGEWJ9DAGHGQFWEAIPMOE9XCGMHMZRALDCTWLWE99999',
-        'UWQEJXPDDGZW9KTRL9ROG9YOWIHYRBVGCNVHBAHVGHKFSQJBPJGWDJXPOYLLOC9AADSJGSSKUTIYA9999',
-      ], (e, trytes) => {
+    iota.api.getTrytes(
+      [
+        'UWQEJXPDDGZW9KTRL9ROG9YOWIHYRBVGCNVHBAHVGHKFSQJBPJGWDJXPOYLLOC9AADSJGSSKUTIYA9999'
+      ],
+      (e, trytes) => {
         expect(e).to.be.null;
-        done();
-      })
 
-    })
+        iota.api.getTrytes(
+          [
+            'JECMCOQ9ZBHIKFQVWX9RHAFQNZWQBTZEZVNYASGEWJ9DAGHGQFWEAIPMOE9XCGMHMZRALDCTWLWE99999',
+            'UWQEJXPDDGZW9KTRL9ROG9YOWIHYRBVGCNVHBAHVGHKFSQJBPJGWDJXPOYLLOC9AADSJGSSKUTIYA9999'
+          ],
+          (e, trytes) => {
+            expect(e).to.be.null;
+            done();
+          }
+        );
+      }
+    );
   });
 
-  it('ext getBalances', (done) => {
+  it('ext getBalances', done => {
     const iota = createAPI({
       path: tmp.dirSync().name,
       password: keys.password
     });
-    const sum = (balances) => balances.reduce((t, i) => t + i, 0);
+    const sum = balances => balances.reduce((t, i) => t + i, 0);
     const addresses = [
       'NOZJAQTAAQGGOXJNFGWTBWQFZXXI9VSHPJYABT9LLWCCMRTVJKLHJIXBT9YKDBAFRHWQVRSQAPWVFUISB',
       'HJLLUBXUMXSBETHZPCBBFHKUJIVEBCPOA9HAOWDQXJSYHZDCY9QQGVTKSMJQXQKEMMDECLSLMCAWYGPNY',
@@ -47,10 +52,12 @@ describe('api.iota', () => {
       'BNQRGECJLPUHCTPZXROUXAVJXWOOZGYAJZABPNFPUJFNOOOFUQX99CV9ESORJHPVCEBNLTIQKSDGMFPFC',
       'BHIUEADCZYUT9FVQIHBCDEFLTDITOPHZUQWTWWTKSYRAWNKLX99GMWULWRBTKUSMHLFLGEKRDSRMCEOF9',
       'GWWI9KRAYABEFXVKGNGMFJSXSUZ9HHTWLDFSHFVRDQIYPVDHTX9GTQEBXKPBL9YAHPJTTVRJYYEETX9WW',
-      'WWJKPEADXWDJRZJHY99WQEUBVQSTDNS9NPJQOYQUSVKOLAGBGULSSKDKSXFSCIHISIIPNATBXFIOIP9DD'];
+      'WWJKPEADXWDJRZJHY99WQEUBVQSTDNS9NPJQOYQUSVKOLAGBGULSSKDKSXFSCIHISIIPNATBXFIOIP9DD'
+    ];
 
     iota.api.ext.getBalances(
-      addresses, 100,
+      addresses,
+      100,
       (error, balances) => {
         expect(error).to.be.null;
         expect(sum(balances)).to.equal(0);
@@ -61,7 +68,8 @@ describe('api.iota', () => {
         expect(total).to.be.above(0);
 
         iota.api.ext.getBalances(
-          addresses, 100,
+          addresses,
+          100,
           (error, balances) => {
             expect(error).to.be.null;
             expect(sum(balances)).to.equal(total);
@@ -71,11 +79,13 @@ describe('api.iota', () => {
             const total2 = sum(balances);
             expect(total2).to.equal(total);
             done();
-          });
-      });
+          }
+        );
+      }
+    );
   });
 
-  it('ext getSpent', (done) => {
+  it('ext getSpent', done => {
     const iota = createAPI({
       path: tmp.dirSync().name,
       password: keys.password
@@ -87,7 +97,8 @@ describe('api.iota', () => {
       'BNQRGECJLPUHCTPZXROUXAVJXWOOZGYAJZABPNFPUJFNOOOFUQX99CV9ESORJHPVCEBNLTIQKSDGMFPFC',
       'BHIUEADCZYUT9FVQIHBCDEFLTDITOPHZUQWTWWTKSYRAWNKLX99GMWULWRBTKUSMHLFLGEKRDSRMCEOF9',
       'GWWI9KRAYABEFXVKGNGMFJSXSUZ9HHTWLDFSHFVRDQIYPVDHTX9GTQEBXKPBL9YAHPJTTVRJYYEETX9WW',
-      'WWJKPEADXWDJRZJHY99WQEUBVQSTDNS9NPJQOYQUSVKOLAGBGULSSKDKSXFSCIHISIIPNATBXFIOIP9DD'];
+      'WWJKPEADXWDJRZJHY99WQEUBVQSTDNS9NPJQOYQUSVKOLAGBGULSSKDKSXFSCIHISIIPNATBXFIOIP9DD'
+    ];
 
     iota.api.ext.getSpent(
       addresses,
@@ -110,11 +121,13 @@ describe('api.iota', () => {
             expect(error).to.be.null;
             expect(states2).to.deep.equal(states);
             done();
-          });
-      });
+          }
+        );
+      }
+    );
   });
 
-  it('ext getAddresses', (done) => {
+  it('ext getAddresses', done => {
     const iota = createAPI({
       path: tmp.dirSync().name,
       password: keys.password
@@ -141,16 +154,19 @@ describe('api.iota', () => {
             expect(error).to.be.null;
             expect(addresses2).to.deep.equal(addresses);
             done();
-          });
-      });
+          }
+        );
+      }
+    );
   });
 
-  it('ext getTransactions', (done) => {
+  it('ext getTransactions', done => {
     const iota = createAPI({
       path: tmp.dirSync().name,
       password: keys.password
     });
-    const address = 'NOZJAQTAAQGGOXJNFGWTBWQFZXXI9VSHPJYABT9LLWCCMRTVJKLHJIXBT9YKDBAFRHWQVRSQAPWVFUISB';
+    const address =
+      'NOZJAQTAAQGGOXJNFGWTBWQFZXXI9VSHPJYABT9LLWCCMRTVJKLHJIXBT9YKDBAFRHWQVRSQAPWVFUISB';
 
     iota.api.ext.getTransactions(
       address,
@@ -176,16 +192,19 @@ describe('api.iota', () => {
             expect(h2).to.deep.equal(hashes);
             expect(i2).to.deep.equal(inclusions);
             done();
-          });
-      });
+          }
+        );
+      }
+    );
   });
 
-  it('ext getTransactionObjects', (done) => {
+  it('ext getTransactionObjects', done => {
     const iota = createAPI({
       path: tmp.dirSync().name,
       password: keys.password
     });
-    const address = 'NOZJAQTAAQGGOXJNFGWTBWQFZXXI9VSHPJYABT9LLWCCMRTVJKLHJIXBT9YKDBAFRHWQVRSQAPWVFUISB';
+    const address =
+      'NOZJAQTAAQGGOXJNFGWTBWQFZXXI9VSHPJYABT9LLWCCMRTVJKLHJIXBT9YKDBAFRHWQVRSQAPWVFUISB';
 
     iota.api.ext.getTransactionObjects(
       address,
@@ -207,8 +226,9 @@ describe('api.iota', () => {
             expect(err).to.be.null;
             expect(result2).to.deep.equal(result);
             done();
-          });
-      });
+          }
+        );
+      }
+    );
   });
-
 });

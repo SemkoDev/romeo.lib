@@ -16,7 +16,11 @@ function decrypt(text, password) {
   let textParts = text.split(':');
   let iv = new Buffer(textParts.shift(), 'hex');
   let encryptedText = new Buffer(textParts.join(':'), 'hex');
-  let decipher = crypto.createDecipheriv('aes-256-cbc', new Buffer(password), iv);
+  let decipher = crypto.createDecipheriv(
+    'aes-256-cbc',
+    new Buffer(password),
+    iv
+  );
   let decrypted = decipher.update(encryptedText);
 
   decrypted = Buffer.concat([decrypted, decipher.final()]);

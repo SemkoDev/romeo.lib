@@ -11,7 +11,7 @@ process.on('unhandledRejection', (reason, p) => {
 
 
 describe('Romeo Page', () => {
-  const keys = crypto.keys.getKeys('Maximilian', 'Mustermann999!');
+  const keys = crypto.keys.getKeys('Maximilian', 'Mustermann999!!!!!');
   const seed = 'AAAVGP9TVQZWPWXDSUQDOBGGHCADNZDUSRIQGAGZQWRNJKSRFOMYYJXHPZ9LKPVLLFYPCFVJYERCKWAAA';
   let iota = null;
   let queue = null;

@@ -1,5 +1,5 @@
 const crypto = require('./crypto');
-const utils = require('./crypto');
+const utils = require('./utils');
 const db = require('./db');
 const createAPI = require('./iota');
 const createQueue = require('./queue');

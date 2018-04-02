@@ -5,8 +5,8 @@ const validate = require('./validate');
  * Creates a random 24-char-long hexadecimal identifier.
  * @returns {string}
  */
-function createIdentifier () {
-  return crypto.randomBytes(12).toString('hex')
+function createIdentifier() {
+  return crypto.randomBytes(12).toString('hex');
 }
 
 /**
@@ -14,7 +14,7 @@ function createIdentifier () {
  * @param time
  * @returns {number}
  */
-function getSecondsPassed (time) {
+function getSecondsPassed(time) {
   if (!time) {
     return 0;
   }

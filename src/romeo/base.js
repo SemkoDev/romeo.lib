@@ -3,7 +3,7 @@ const DEFAULT_OPTIONS = {
   logIdent: 'BASE',
   logIdentWidth: 12,
   onLog: () => {},
-  onChange: (obj) => {},
+  onChange: obj => {}
 };
 
 /**
@@ -29,7 +29,7 @@ class Base {
       const logIdent = `${this.opts.logIdent}${space}`;
       console.log(`${timeString}\t${logIdent}`, ...arguments);
     }
-    this.opts.onLog && this.opts.onLog(Array.from(arguments).join(' '))
+    this.opts.onLog && this.opts.onLog(Array.from(arguments).join(' '));
   }
 
   formatMilliseconds(milliseconds) {
@@ -39,7 +39,7 @@ class Base {
     return formatted.slice(2);
   }
 
-  onChange () {
+  onChange() {
     this.opts.onChange && this.opts.onChange(this);
   }
 }

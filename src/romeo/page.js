@@ -2,86 +2,129 @@ const { BasePage } = require('./base-page');
 const { IOTA_BALANCE_TRESHOLD, PAGE_RESYNC_SECONDS } = require('../config');
 const { getSecondsPassed } = require('../utils');
 
-
 const DEFAULT_OPTIONS = {
   index: 1,
   isCurrent: true,
   queue: null,
   seed: null,
-  iota: null
+  iota: null,
+  db: null
 };
 
 class Page extends BasePage {
-  constructor (options) {
-    const opts = Object.assign({}, DEFAULT_OPTIONS, {
-      logIdent: `PAGE #${options.index || DEFAULT_OPTIONS.index}`
-    }, options);
+  constructor(options) {
+    const opts = Object.assign(
+      {},
+      DEFAULT_OPTIONS,
+      {
+        logIdent: `PAGE #${options.index || DEFAULT_OPTIONS.index}`
+      },
+      options
+    );
     super(opts);
     this.lastSynced = null;
     this.isSyncing = false;
   }
 
-  async init () {
+  async init() {
+    const { db, seed } = this.opts;
+    if (db) {
+      const timestamp = await db.get(`lastsynced-${seed}`);
+      this.lastSynced = timestamp ? new Date(timestamp) : null;
+    }
     return await this.sync();
   }
 
-  async sync (force = false, priority) {
+  async sync(force = false, priority) {
+    const { db, seed, isCurrent } = this.opts;
     if (!this.isSyncing) {
       try {
         this.isSyncing = true;
-        await this.syncAddresses(priority);
-        await this.syncBalances(priority);
-        await this.syncSpent(priority);
-        await this.syncTransactions(!force && !this.opts.isCurrent, priority);
+        await this.syncAddresses(priority, !force);
+        if (!Object.keys(this.addresses).length) {
+          await this.getNewAddress();
+          await this.syncAddresses(priority, false);
+        }
+        await this.syncBalances(priority, !force);
+        await this.syncSpent(priority, !force);
+        // Auto-create a new unspent address
+        if (!Object.values(this.addresses).find(a => !a.spent)) {
+          await this.getNewAddress();
+          await this.syncAddresses(priority, false);
+        }
+        await this.syncTransactions(priority, !force && !isCurrent);
         this.isSyncing = false;
-        this.lastSynced = new Date();
+        this.lastSynced = isCurrent || force ? new Date() : this.lastSynced;
+        if (db) {
+          await db.put(`lastsynced-${seed}`, this.lastSynced);
+          this.onChange();
+        }
       } catch (e) {
         this.isSyncing = false;
+        this.onChange();
         throw e;
       }
     }
     return this;
   }
 
-  setCurrent (isCurrent) {
+  setCurrent(isCurrent) {
     this.opts.isCurrent = isCurrent;
   }
 
-  isCurrent () {
+  isCurrent() {
     return this.opts.isCurrent;
   }
 
-  isSynced () {
-    return this.lastSynced && getSecondsPassed(this.lastSynced) > PAGE_RESYNC_SECONDS;
+  isSynced() {
+    return (
+      this.lastSynced && getSecondsPassed(this.lastSynced) < PAGE_RESYNC_SECONDS
+    );
   }
 
-  getBalance () {
+  asJson() {
+    const { lastSynced, isSyncing } = this;
+    return Object.assign(super.asJson(), { lastSynced, isSyncing });
+  }
+
+  getBalance() {
     return Object.values(this.addresses)
       .map(a => a.balance)
       .reduce((t, i) => t + i, 0);
   }
 
-  getInputs (includeSpent = false) {
-    return Object
-      .values(this.addresses)
+  getCurrentAddress() {
+    return Object.values(this.addresses)
+      .sort((a, b) => b.keyIndex - a.keyIndex)
+      .find(a => !a.spent);
+  }
+
+  getInputs(includeSpent = false) {
+    return Object.values(this.addresses)
       .filter(a => a.balance > 0)
-      .filter(a => includeSpent || !a.spent)
+      .filter(a => includeSpent || !a.spent);
   }
 
-  isLoading () {
+  isLoading() {
     const { queue, index } = this.opts;
-    return Object.values(queue.jobs)
-      .filter(j => !j.isFinished && j.ext.page === index)
+    return Object.values(queue.jobs).filter(
+      j => !j.isFinished && j.ext.page === index
+    );
   }
 
-  getTransactions () {
-    return Object
-      .values(this.addresses)
+  getTransactions() {
+    return Object.values(this.addresses)
       .map(a => a.transactions)
-      .reduce((t, i) => t.concat(i), [])
+      .reduce((t, i) => t.concat(i), []);
   }
 
-  applyBalances (addresses, balances) {
+  getNewAddress(total = 1) {
+    return super.getNewAddress(total, addresses =>
+      this.syncTransactions(40, false, addresses)
+    );
+  }
+
+  applyBalances(addresses, balances) {
     addresses.forEach((address, i) => {
       if (this.addresses[address]) {
         this.addresses[address].balance = balances[i];
@@ -90,7 +133,7 @@ class Page extends BasePage {
     this.onChange();
   }
 
-  applySpent (addresses, states) {
+  applySpent(addresses, states) {
     addresses.forEach((address, i) => {
       if (this.addresses[address]) {
         this.addresses[address].spent = states[i];
@@ -99,119 +142,129 @@ class Page extends BasePage {
     this.onChange();
   }
 
-  applyTransactions (address, transactions) {
+  applyTransactions(address, transactions) {
     const obj = this.addresses[address];
     if (!obj) return;
 
-    transactions.forEach((transaction) => {
+    transactions.forEach(transaction => {
       obj.transactions[transaction.hash] = transaction;
     });
     this.onChange();
   }
 
-  syncBalances (priority) {
+  syncBalances(priority, cachedOnly) {
     const { iota, queue, index, isCurrent } = this.opts;
     const addresses = Object.keys(this.addresses);
 
     return new Promise((resolve, reject) => {
-      const balancePromise = new Promise((resolve, reject) => {
-        iota.api.ext.getBalances(
-          addresses,
-          IOTA_BALANCE_TRESHOLD,
-          (err, balances) => {
-            if (!err) {
+      const balancePromise = () =>
+        new Promise((resolve, reject) => {
+          iota.api.ext.getBalances(
+            addresses,
+            IOTA_BALANCE_TRESHOLD,
+            (err, balances) => {
+              if (!err) {
+                this.applyBalances(addresses, balances);
+              }
+            },
+            async (err, balances) => {
+              if (err) {
+                return reject(err);
+              }
               this.applyBalances(addresses, balances);
-            }
-          },
-          async (err, balances) => {
-            if (err) {
-              return reject(err);
-            }
-            this.applyBalances(addresses, balances);
-            resolve(this);
-          }
-        )
-      });
+              resolve(this);
+            },
+            cachedOnly
+          );
+        });
       const { job } = queue.add(
         balancePromise,
         priority || (isCurrent ? 24 : 14),
         {
           page: index,
           type: 'SYNC_BALANCES',
-          description: `Syncing balances for ${isCurrent ? 'current ' : ''}page #${index}`
-        });
+          description: `${cachedOnly ? 'Loading' : 'Syncing'} balances`,
+          cachedOnly
+        }
+      );
       job.on('finish', resolve);
-      job.on('failed', (err) => {
+      job.on('failed', err => {
         this.log('Could not sync page balances', err);
         reject(err);
       });
     });
   }
 
-  syncSpent (priority) {
+  syncSpent(priority, cachedOnly) {
     const { iota, queue, index, isCurrent } = this.opts;
     const addresses = Object.keys(this.addresses);
 
     return new Promise((resolve, reject) => {
-      const spentPromise = new Promise((resolve, reject) => {
-        iota.api.ext.getSpent(
-          addresses,
-          (err, states) => {
-            if (!err) {
+      const spentPromise = () =>
+        new Promise((resolve, reject) => {
+          iota.api.ext.getSpent(
+            addresses,
+            (err, states) => {
+              if (!err) {
+                this.applySpent(addresses, states);
+              }
+            },
+            async (err, states) => {
+              if (err) {
+                return reject(err);
+              }
               this.applySpent(addresses, states);
-            }
-          },
-          async (err, states) => {
-            if (err) {
-              return reject(err);
-            }
-            this.applySpent(addresses, states);
-            resolve(this);
-          }
-        )
-      });
+              resolve(this);
+            },
+            cachedOnly
+          );
+        });
       const { job } = queue.add(
         spentPromise,
         priority || (isCurrent ? 23 : 13),
         {
           page: index,
           type: 'SYNC_SPENT',
-          description: `Syncing states`
-        });
+          description: `${cachedOnly ? 'Loading' : 'Syncing'} spent addresses`,
+          cachedOnly
+        }
+      );
       job.on('finish', resolve);
-      job.on('failed', (err) => {
+      job.on('failed', err => {
         this.log('Could not sync page states', err);
         reject(err);
       });
     });
   }
 
-  syncTransactions (cachedOnly = false, priority = null) {
+  syncTransactions(priority = null, cachedOnly = false, addresses = null) {
     const { iota, queue, index, isCurrent } = this.opts;
 
     return new Promise((resolve, reject) => {
-      const transactionPromise = Promise.all(
-        Object.keys(this.addresses).map((address) => (
-          new Promise((resolve, reject) => {
-            iota.api.ext.getTransactionObjects(
-              address,
-              (err, transactions) => {
-                if (!err) {
-                  this.applyTransactions(address, transactions);
-                }
-              },
-              async (err, transactions) => {
-                if (err) {
-                  return reject(err);
-                }
-                this.applyTransactions(address, transactions);
-                resolve(this);
-              },
-              cachedOnly
-            )
-          })
-        ))
-      );
+      const transactionPromise = () =>
+        Promise.all(
+          (addresses || Object.keys(this.addresses)).map(
+            address =>
+              new Promise((resolve, reject) => {
+                iota.api.ext.getTransactionObjects(
+                  address,
+                  (err, transactions) => {
+                    if (!err) {
+                      this.applyTransactions(address, transactions);
+                    }
+                  },
+                  async (err, transactions) => {
+                    if (err) {
+                      return reject(err);
+                    }
+                    this.applyTransactions(address, transactions);
+                    resolve(this);
+                  },
+                  cachedOnly
+                );
+              })
+          )
+        );
 
       const { job } = queue.add(
         transactionPromise,
@@ -219,16 +272,20 @@ class Page extends BasePage {
         {
           page: index,
           type: 'SYNC_TRANSACTIONS',
-          description: `Syncing transactions`
-        });
-      job.on('finish', resolve);
-      job.on('failed', (err) => {
+          description: `${cachedOnly ? 'Loading' : 'Syncing'} transactions`,
+          cachedOnly
+        }
+      );
+      job.on('finish', result => {
+        this.onChange();
+        resolve(result);
+      });
+      job.on('failed', err => {
         this.log('Could not sync page transactions', err);
         reject(err);
       });
-    })
+    });
   }
-
 }
 
 module.exports = {

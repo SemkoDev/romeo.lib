@@ -2,18 +2,17 @@ const IOTA = require('iota.lib.js');
 const { Database } = require('./db');
 const { IOTA_API_ENDPOINT } = require('./config');
 
-function createAPI ({ path, password, provider, database }) {
+function createAPI({ path, password, provider, database }) {
   const db = database || new Database({ path, password });
-  const iota = new IOTA({provider: provider || IOTA_API_ENDPOINT});
+  const iota = new IOTA({ provider: provider || IOTA_API_ENDPOINT });
   const getTrytes = iota.api.getTrytes.bind(iota.api);
 
-  iota.api.getTrytes = function (hashes, callback) {
+  iota.api.getTrytes = function(hashes, callback) {
     // First, get trytes from db
-    db.getMany(hashes.map(h => `tryte-${h}`))
-      .then((result) => {
+    db.getMany(hashes.map(h => `tryte-${h}`)).then(result => {
       // See what we don't have
       const requestHashes = result
-        .map((r, i) => r ? null : hashes[i])
+        .map((r, i) => (r ? null : hashes[i]))
         .filter(h => h);
 
       if (requestHashes.length) {
@@ -23,90 +22,115 @@ function createAPI ({ path, password, provider, database }) {
             callback(err, null);
           }
           // Save all returned hashes
-          Promise.all(trytes.map((tryte, i) => (
-            db.put(
-              `tryte-${requestHashes[i]}`,
-              tryte
-            )
-          ))).then(() => {
+          Promise.all(
+            trytes.map((tryte, i) => db.put(`tryte-${requestHashes[i]}`, tryte))
+          ).then(() => {
             // Mixin new returned trytes to previous results:
-            callback(null, result.map(r => r || trytes.splice(0, 1)[0]))
-          })
+            callback(null, result.map(r => r || trytes.splice(0, 1)[0]));
+          });
         });
-
       } else {
         // If we have everything, return:
-        callback(null, result)
+        callback(null, result);
       }
     });
   };
 
-  function getBalances (addresses, threshold, onCache, onLive) {
+  function getBalances(
+    addresses,
+    threshold,
+    onCache,
+    onLive,
+    cachedOnly = false
+  ) {
     const callback = (error, results) => {
       if (error) {
         return onLive(error, null);
       }
-      Promise.all(addresses.map((address, i) => (
-        db.put(`balance-${address}`, results.balances[i])
-      ))).then(() => onLive(null, results.balances.map(
-        (b) => parseInt(b)
-      )))
+      Promise.all(
+        addresses.map((address, i) =>
+          db.put(`balance-${address}`, results.balances[i])
+        )
+      ).then(() => onLive(null, results.balances.map(b => parseInt(b))));
     };
 
-    db.getMany(addresses.map(address => `balance-${address}`))
-      .then((result) => {
-        const balances = result.map((r) => parseInt(r || 0));
+    db
+      .getMany(addresses.map(address => `balance-${address}`))
+      .then(result => {
+        const balances = result.map(r => parseInt(r || 0));
         onCache(null, balances);
-        iota.api.getBalances(addresses, threshold, callback) })
-      .catch((error) => {
+        if (cachedOnly) {
+          onLive(null, balances);
+        } else {
+          iota.api.getBalances(addresses, threshold, callback);
+        }
+      })
+      .catch(error => {
         onCache(error, null);
-        iota.api.getBalances(addresses, threshold, callback) })
+        !cachedOnly && iota.api.getBalances(addresses, threshold, callback);
+      });
   }
 
-  function getSpent (addresses, onCache, onLive) {
+  function getSpent(addresses, onCache, onLive, cachedOnly = false) {
     const callback = (error, results) => {
       if (error) {
         return onLive(error, null);
       }
-      Promise.all(addresses.map((address, i) => (
-        db.put(`spent-${address}`, results[i])
-      ))).then(() => onLive(null, results))
+      Promise.all(
+        addresses.map((address, i) => db.put(`spent-${address}`, results[i]))
+      ).then(() => onLive(null, results));
     };
 
-    db.getMany(addresses.map(address => `spent-${address}`))
-      .then((result) => {
+    db
+      .getMany(addresses.map(address => `spent-${address}`))
+      .then(result => {
         onCache(null, result);
-        iota.api.wereAddressesSpentFrom(addresses, callback) })
-      .catch((error) => {
+        if (cachedOnly) {
+          onLive(null, result);
+        } else {
+          iota.api.wereAddressesSpentFrom(addresses, callback);
+        }
+      })
+      .catch(error => {
         onCache(error, null);
-        iota.api.wereAddressesSpentFrom(addresses, callback) })
+        iota.api.wereAddressesSpentFrom(addresses, callback);
+      });
   }
 
-  function getAddresses (seed, onCache, onLive) {
+  function getAddresses(seed, onCache, onLive, cachedOnly = false) {
     const callback = (error, results) => {
       if (error) {
         return onLive(error, null);
       }
       const addresses = results.slice(0, -1);
-      db.put(`addresses-${seed}`, addresses)
+      db
+        .put(`addresses-${seed}`, addresses)
         .then(() => onLive(null, addresses));
     };
 
-    db.get(`addresses-${seed}`)
-      .then((result) => {
+    db
+      .get(`addresses-${seed}`)
+      .then(result => {
         onCache(null, result ? result : []);
-        iota.api.getNewAddress(seed, { returnAll: true }, callback) })
-      .catch((error) => {
+        if (cachedOnly) {
+          onLive(null, result ? result : []);
+        } else {
+          iota.api.getNewAddress(seed, { returnAll: true }, callback);
+        }
+      })
+      .catch(error => {
         onCache(error, null);
-        iota.api.getNewAddress(seed, { returnAll: true }, callback) })
+        iota.api.getNewAddress(seed, { returnAll: true }, callback);
+      });
   }
 
-  function getTransactions (address, onCache, onLive, cachedOnly = false) {
+  function getTransactions(address, onCache, onLive, cachedOnly = false) {
     const callback = (error, hashes, inclusions) => {
       if (error) {
         return onLive(error, null);
       }
-      db.put(`transactions-${address}`, hashes)
+      db
+        .put(`transactions-${address}`, hashes)
         .then(() => db.put(`inclusions-${address}`, inclusions))
         .then(() => onLive(null, { hashes, inclusions }));
     };
@@ -115,45 +139,48 @@ function createAPI ({ path, password, provider, database }) {
       if (cachedOnly) {
         return;
       }
-      iota.api.findTransactions({ addresses: [ address ] },
-        (error, hashes) => {
-          if (error) {
-            return callback(error, null, null);
-          }
-          iota.api.getLatestInclusion(hashes, (error, inclusions) => {
-            callback(error, hashes, inclusions)
-          })
-        })
+      iota.api.findTransactions({ addresses: [address] }, (error, hashes) => {
+        if (error) {
+          return callback(error, null, null);
+        }
+        iota.api.getLatestInclusion(hashes, (error, inclusions) => {
+          callback(error, hashes, inclusions);
+        });
+      });
     };
 
-    const dbError = (error) => {
+    const dbError = error => {
       onCache(error, null, null);
-      findTransactions()
+      findTransactions();
     };
 
-    db.get(`transactions-${address}`)
-      .then((hashes) => {
+    db
+      .get(`transactions-${address}`)
+      .then(hashes => {
         hashes = hashes ? hashes : [];
-        return db.get(`inclusions-${address}`)
-          .then((inclusions) => {
-            onCache(
-              null,
-              {
-                hashes,
-                inclusions: inclusions || hashes.map(() => false)
-              }
-            );
-            findTransactions();
+        return db
+          .get(`inclusions-${address}`)
+          .then(inclusions => {
+            const result = {
+              hashes,
+              inclusions: inclusions || hashes.map(() => false)
+            };
+            onCache(null, result);
+            if (cachedOnly) {
+              onLive(null, result);
+            } else {
+              findTransactions();
+            }
           })
-          .catch(dbError)
+          .catch(dbError);
       })
       .catch(dbError);
   }
 
-  function getTransactionObjects (address, onCache, onLive, cachedOnly = false) {
+  function getTransactionObjects(address, onCache, onLive, cachedOnly = false) {
     let liveDone = false;
 
-    const process = (live) => (error, result) => {
+    const process = live => (error, result) => {
       const cb = live ? onLive : onCache;
 
       if (error) {
@@ -178,11 +205,14 @@ function createAPI ({ path, password, provider, database }) {
           liveDone = true;
         }
 
-        cb(null, trytes.map((tryte, i) => (
-          Object.assign({}, iota.utils.transactionObject(tryte), {
-            persistence: inclusions[i]
-          })
-        )))
+        cb(
+          null,
+          trytes.map((tryte, i) =>
+            Object.assign({}, iota.utils.transactionObject(tryte), {
+              persistence: inclusions[i]
+            })
+          )
+        );
       });
     };
 
@@ -194,10 +224,11 @@ function createAPI ({ path, password, provider, database }) {
     getAddresses,
     getTransactions,
     getTransactionObjects,
-    getSpent
+    getSpent,
+    provider: IOTA_API_ENDPOINT
   };
 
-  return iota
+  return iota;
 }
 
 module.exports = createAPI;

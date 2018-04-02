@@ -8,16 +8,23 @@ const { Pages } = require('./pages');
 const DEFAULT_OPTIONS = {
   username: null,
   password: null,
-  syncInterval: 30000,
+  syncInterval: 60000,
   dbPath: 'romeo'
 };
 
 class Romeo extends Base {
   constructor(options) {
-    const opts = Object.assign({}, DEFAULT_OPTIONS, {
-      logIdent: 'ROMEO'
-    }, options);
+    const opts = Object.assign(
+      {},
+      DEFAULT_OPTIONS,
+      {
+        logIdent: 'ROMEO'
+      },
+      options
+    );
     super(opts);
+    this.isOnline = 1;
+    this.checkingOnline = false;
     this.opts = opts;
     this.keys = crypto.keys.getKeys(opts.username, opts.password);
     this.db = new Database({ path: opts.dbPath, password: this.keys.password });
@@ -27,31 +34,37 @@ class Romeo extends Base {
       keys: this.keys,
       queue: this.queue,
       iota: this.iota,
-      onLog: (log) => console.log('onLog', log),
+      db: this.db,
+      onLog: log => console.log('onLog', log),
       onChange: this.onChange
     });
     this.updater = null;
+    this.onlineUpdater = null;
+    this.checkOnline = this.checkOnline.bind(this);
+    this.checkOnline();
   }
 
-  async init (restoreString) {
+  async init(restoreString) {
     if (restoreString) {
       await this.db.restore(data, true);
     }
     await this.pages.init();
-    if (!Object.keys(this.pages.pages).length) {
-      await this.pages.getNewPage();
-      await this.pages.getCurrent().getNewAddress()
-    }
     this.updater = setInterval(
       () => this.pages.syncCurrentPage(),
       this.opts.syncInterval
     );
+    this.onlineUpdater = setInterval(this.checkOnline, 30000);
     return this;
   }
 
-  async terminate (returnBackup = false) {
+  async terminate(returnBackup = false) {
     if (this.updater) {
       clearInterval(this.updater);
+      this.updater = null;
+    }
+    if (this.onlineUpdater) {
+      clearInterval(this.onlineUpdater);
+      this.onlineUpdater = null;
     }
     this.queue.removeAll();
     if (returnBackup) {
@@ -60,29 +73,45 @@ class Romeo extends Base {
     return true;
   }
 
-  asJson () {
-    const { queue : { jobs }, keys, pages } = this;
+  asJson() {
+    const { queue: { jobs }, keys, pages, isOnline, checkingOnline } = this;
     return {
       keys,
       jobs: Object.values(jobs),
       genericJobs: pages.getJobs(),
-      pages: pages.asJson()
-    }
+      pages: pages.asJson(),
+      isOnline,
+      checkingOnline,
+      provider: this.iota.api.ext.provider
+    };
   }
 
-  async backupDatabase () {
+  checkOnline() {
+    const start = new Date();
+    this.checkingOnline = true;
+    this.iota.api.getNodeInfo(err => {
+      this.checkingOnline = false;
+      if (err && this.isOnline) {
+        this.isOnline = false;
+        this.onChange();
+      }
+      this.isOnline = new Date() - start;
+      this.onChange();
+    });
+  }
+
+  async backupDatabase() {
     return await this.db.backup(true);
   }
 
-  async newPage (opts) {
-
+  async newPage(opts) {
     const { sourcePage, includeReuse = false } = opts;
     const currentPage = sourcePage || this.pages.getCurrent();
 
     const newPage = this.pages.getByAddress((await this.pages.getNewPage())[0]);
 
     if (!currentPage.isSynced()) {
-      await currentPage.sync()
+      await currentPage.sync();
     }
     const address = (await newPage.getNewAddress())[0];
     const inputs = currentPage.getInputs(includeReuse);
@@ -92,8 +121,8 @@ class Romeo extends Base {
         [{ address, value }],
         inputs,
         'Moving funds from the current page to the new one',
-        'Failed moving funds from the current page to the new one',
-        );
+        'Failed moving funds from the current page to the new one'
+      );
       await newPage.syncTransactions();
     }
     return newPage;

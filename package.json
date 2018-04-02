@@ -10,25 +10,17 @@
     "type": "git",
     "url": "https://github.com/SemkoDev/romeo.lib.git"
   },
-  "files": [
-    "src",
-    "dist",
-    "README.md",
-    "LICENSE.md"
-  ],
-  "keywords": [
-    "blockchain",
-    "IOTA",
-    "tangle",
-    "p2p"
-  ],
+  "files": ["src", "dist", "README.md", "LICENSE.md"],
+  "keywords": ["blockchain", "IOTA", "tangle", "p2p"],
   "watch": {
     "dist": "{src}/*.js"
   },
   "scripts": {
-    "test": "mocha --timeout 120000 --bail --ui bdd $(find src -name \"*.test.js\")",
+    "test":
+      "mocha --timeout 240000 --bail --ui bdd $(find src -name \"*.test.js\")",
     "clean": "rimraf dist",
-    "fix": "prettier --single-quote --write index.js src/*.{js} src/**/*.{js} package.json *.md",
+    "fix":
+      "prettier --single-quote --write index.js src/*.js src/**/*.js package.json *.md",
     "dist": "parcel build src/index.js --out-dir dist",
     "make": "npm run clean && npm run fix && npm run dist",
     "watch": "npm-watch"

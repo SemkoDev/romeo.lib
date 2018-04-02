@@ -14,7 +14,7 @@ describe('Romeo', () => {
     romeo = new Romeo({
       dbPath: tmp.dirSync().name,
       username: 'Maximilian',
-      password: 'Mustermann999!'
+      password: 'Mustermann999!!!!!'
     });
   });
 
