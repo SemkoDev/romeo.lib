@@ -44,6 +44,8 @@ class Pages extends BasePage {
   applyAddresses(addresses) {
     const { keys: { password }, queue, iota, db } = this.opts;
     const startIndex = Object.keys(this.pages).length;
+    let currentPage = null;
+    const otherPages = [];
 
     addresses &&
       addresses.length &&
@@ -71,10 +73,18 @@ class Pages extends BasePage {
           keyIndex: index,
           page
         };
-
-        page.init();
+        if (isCurrent) {
+          currentPage = page;
+        } else {
+          otherPages.push(page);
+        }
       }
     });
+    if (currentPage) {
+      currentPage.init(false, 60).then(
+        () => Promise.all(otherPages.map(p => p.init()))
+      );
+    }
     this.onChange();
   }
 

@@ -26,13 +26,13 @@ class Page extends BasePage {
     this.isSyncing = false;
   }
 
-  async init() {
+  async init(force = false, priority) {
     const { db, seed } = this.opts;
     if (db) {
       const timestamp = await db.get(`lastsynced-${seed}`);
       this.lastSynced = timestamp ? new Date(timestamp) : null;
     }
-    return await this.sync();
+    return await this.sync(force, priority);
   }
 
   async sync(force = false, priority) {
@@ -42,8 +42,11 @@ class Page extends BasePage {
         this.isSyncing = true;
         await this.syncAddresses(priority, !force);
         if (!Object.keys(this.addresses).length) {
-          await this.getNewAddress();
           await this.syncAddresses(priority, false);
+          if (!Object.keys(this.addresses).length) {
+            await this.getNewAddress();
+            await this.syncAddresses(priority, false);
+          }
         }
         await this.syncBalances(priority, !force);
         await this.syncSpent(priority, !force);
@@ -84,13 +87,23 @@ class Page extends BasePage {
 
   asJson() {
     const { lastSynced, isSyncing } = this;
-    return Object.assign(super.asJson(), { lastSynced, isSyncing });
+    return Object.assign(super.asJson(), {
+      lastSynced,
+      isSyncing,
+      balance: this.getBalance(),
+      hasSPA: this.hasSPA()
+    });
   }
 
   getBalance() {
     return Object.values(this.addresses)
       .map(a => a.balance)
       .reduce((t, i) => t + i, 0);
+  }
+
+  hasSPA() {
+    // Has spent positive addresses?
+    return Object.values(this.addresses).find(a => a.balance > 0 && a.spent);
   }
 
   getCurrentAddress() {

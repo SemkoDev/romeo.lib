@@ -23,6 +23,7 @@ class Romeo extends Base {
       options
     );
     super(opts);
+    this.ready = false;
     this.isOnline = 1;
     this.checkingOnline = false;
     this.opts = opts;
@@ -46,7 +47,7 @@ class Romeo extends Base {
 
   async init(restoreString) {
     if (restoreString) {
-      await this.db.restore(data, true);
+      await this.db.restore(restoreString, true);
     }
     await this.pages.init();
     this.updater = setInterval(
@@ -74,7 +75,7 @@ class Romeo extends Base {
   }
 
   asJson() {
-    const { queue: { jobs }, keys, pages, isOnline, checkingOnline } = this;
+    const { queue: { jobs }, keys, pages, isOnline, checkingOnline, ready } = this;
     return {
       keys,
       jobs: Object.values(jobs),
@@ -82,7 +83,8 @@ class Romeo extends Base {
       pages: pages.asJson(),
       isOnline,
       checkingOnline,
-      provider: this.iota.api.ext.provider
+      provider: this.iota.api.ext.provider,
+      ready
     };
   }
 
@@ -126,6 +128,16 @@ class Romeo extends Base {
       await newPage.syncTransactions();
     }
     return newPage;
+  }
+
+  onChange () {
+    if (!this.ready) {
+      const current = this.pages.getCurrent();
+      if (current && Object.keys(current.addresses).length) {
+        this.ready = true;
+      }
+    }
+    return super.onChange();
   }
 }
 
