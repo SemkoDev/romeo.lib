@@ -75,7 +75,14 @@ class Romeo extends Base {
   }
 
   asJson() {
-    const { queue: { jobs }, keys, pages, isOnline, checkingOnline, ready } = this;
+    const {
+      queue: { jobs },
+      keys,
+      pages,
+      isOnline,
+      checkingOnline,
+      ready
+    } = this;
     return {
       keys,
       jobs: Object.values(jobs),
@@ -93,9 +100,10 @@ class Romeo extends Base {
     this.checkingOnline = true;
     this.iota.api.getNodeInfo(err => {
       this.checkingOnline = false;
-      if (err && this.isOnline) {
+      if (err) {
         this.isOnline = false;
         this.onChange();
+        return;
       }
       this.isOnline = new Date() - start;
       this.onChange();
@@ -106,16 +114,17 @@ class Romeo extends Base {
     return await this.db.backup(true);
   }
 
-  async newPage(opts) {
+  async newPage(opts = {}) {
     const { sourcePage, includeReuse = false } = opts;
     const currentPage = sourcePage || this.pages.getCurrent();
 
-    const newPage = this.pages.getByAddress((await this.pages.getNewPage())[0]);
+    const newPage = this.pages.getByAddress((await this.pages.getNewPage())[0])
+      .page;
 
     if (!currentPage.isSynced()) {
       await currentPage.sync();
     }
-    const address = (await newPage.getNewAddress())[0];
+    const address = newPage.getCurrentAddress().address;
     const inputs = currentPage.getInputs(includeReuse);
     const value = inputs.reduce((t, i) => t + i.balance, 0);
     if (value > 0) {
@@ -127,10 +136,11 @@ class Romeo extends Base {
       );
       await newPage.syncTransactions();
     }
+    this.onChange();
     return newPage;
   }
 
-  onChange () {
+  onChange() {
     if (!this.ready) {
       const current = this.pages.getCurrent();
       if (current && Object.keys(current.addresses).length) {

@@ -48,14 +48,14 @@ class Page extends BasePage {
             await this.syncAddresses(priority, false);
           }
         }
-        await this.syncBalances(priority, !force);
-        await this.syncSpent(priority, !force);
         // Auto-create a new unspent address
         if (!Object.values(this.addresses).find(a => !a.spent)) {
           await this.getNewAddress();
           await this.syncAddresses(priority, false);
         }
         await this.syncTransactions(priority, !force && !isCurrent);
+        await this.syncBalances(priority, !force);
+        await this.syncSpent(priority, !force);
         this.isSyncing = false;
         this.lastSynced = isCurrent || force ? new Date() : this.lastSynced;
         if (db) {
@@ -103,7 +103,9 @@ class Page extends BasePage {
 
   hasSPA() {
     // Has spent positive addresses?
-    return Object.values(this.addresses).find(a => a.balance > 0 && a.spent);
+    return Object.values(this.addresses).find(
+      a => a.rawBalance > 0 && a.balance > 0 && a.spent
+    );
   }
 
   getCurrentAddress() {
@@ -162,6 +164,10 @@ class Page extends BasePage {
     transactions.forEach(transaction => {
       obj.transactions[transaction.hash] = transaction;
     });
+    obj.rawBalance = Object.values(obj.transactions).reduce(
+      (t, i) => t + i.value,
+      0
+    );
     this.onChange();
   }
 

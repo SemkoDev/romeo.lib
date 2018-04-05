@@ -146,31 +146,31 @@ var Page = function (_BasePage) {
                 return this.syncAddresses(priority, false);
 
               case 14:
-                _context2.next = 16;
-                return this.syncBalances(priority, !force);
-
-              case 16:
-                _context2.next = 18;
-                return this.syncSpent(priority, !force);
-
-              case 18:
                 if (Object.values(this.addresses).find(function (a) {
                   return !a.spent;
                 })) {
-                  _context2.next = 23;
+                  _context2.next = 19;
                   break;
                 }
 
-                _context2.next = 21;
+                _context2.next = 17;
                 return this.getNewAddress();
+
+              case 17:
+                _context2.next = 19;
+                return this.syncAddresses(priority, false);
+
+              case 19:
+                _context2.next = 21;
+                return this.syncTransactions(priority, !force && !isCurrent);
 
               case 21:
                 _context2.next = 23;
-                return this.syncAddresses(priority, false);
+                return this.syncBalances(priority, !force);
 
               case 23:
                 _context2.next = 25;
-                return this.syncTransactions(priority, !force && !isCurrent);
+                return this.syncSpent(priority, !force);
 
               case 25:
                 this.isSyncing = false;
@@ -258,7 +258,7 @@ var Page = function (_BasePage) {
     value: function hasSPA() {
       // Has spent positive addresses?
       return Object.values(this.addresses).find(function (a) {
-        return a.balance > 0 && a.spent;
+        return a.rawBalance > 0 && a.balance > 0 && a.spent;
       });
     }
   }, {
@@ -345,6 +345,9 @@ var Page = function (_BasePage) {
       transactions.forEach(function (transaction) {
         obj.transactions[transaction.hash] = transaction;
       });
+      obj.rawBalance = Object.values(obj.transactions).reduce(function (t, i) {
+        return t + i.value;
+      }, 0);
       this.onChange();
     }
   }, {

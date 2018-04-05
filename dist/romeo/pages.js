@@ -84,7 +84,7 @@ var Pages = function (_BasePage) {
       var otherPages = [];
 
       addresses && addresses.length && Object.values(this.pages).forEach(function (page) {
-        return page.setCurrent(false);
+        return page.page.setCurrent(false);
       });
 
       addresses.forEach(function (address, keyIndex) {
@@ -124,6 +124,9 @@ var Pages = function (_BasePage) {
           }));
         });
       }
+      Object.values(this.pages).sort(function (a, b) {
+        return b.keyIndex - a.keyIndex;
+      })[0].page.setCurrent(true);
       this.onChange();
     }
   }, {

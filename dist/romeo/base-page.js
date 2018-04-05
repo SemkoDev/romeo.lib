@@ -145,6 +145,7 @@ var BasePage = function (_Base) {
             keyIndex: keyIndex + startIndex,
             security: 2,
             balance: 0,
+            rawBalance: 0,
             spent: null,
             transactions: {}
           };
@@ -197,20 +198,24 @@ var BasePage = function (_Base) {
                         return _this4.restoreAddresses(addresses, 'Attaching new addresses', 'Could not attach new addresses');
 
                       case 5:
+                        _context3.next = 7;
+                        return _this4.syncAddresses(100);
+
+                      case 7:
                         _context3.t0 = callback;
 
                         if (!_context3.t0) {
-                          _context3.next = 9;
+                          _context3.next = 11;
                           break;
                         }
 
-                        _context3.next = 9;
+                        _context3.next = 11;
                         return callback(addresses);
 
-                      case 9:
+                      case 11:
                         resolve(addresses);
 
-                      case 10:
+                      case 12:
                       case 'end':
                         return _context3.stop();
                     }

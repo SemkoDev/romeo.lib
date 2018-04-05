@@ -185,9 +185,10 @@ var Romeo = function (_Base) {
       this.checkingOnline = true;
       this.iota.api.getNodeInfo(function (err) {
         _this3.checkingOnline = false;
-        if (err && _this3.isOnline) {
+        if (err) {
           _this3.isOnline = false;
           _this3.onChange();
+          return;
         }
         _this3.isOnline = new Date() - start;
         _this3.onChange();
@@ -224,7 +225,9 @@ var Romeo = function (_Base) {
   }, {
     key: 'newPage',
     value: function () {
-      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(opts) {
+      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
+        var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
         var sourcePage, _opts$includeReuse, includeReuse, currentPage, newPage, address, inputs, value;
 
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -239,7 +242,7 @@ var Romeo = function (_Base) {
 
               case 5:
                 _context4.t1 = _context4.sent[0];
-                newPage = _context4.t0.getByAddress.call(_context4.t0, _context4.t1);
+                newPage = _context4.t0.getByAddress.call(_context4.t0, _context4.t1).page;
 
                 if (currentPage.isSynced()) {
                   _context4.next = 10;
@@ -250,32 +253,29 @@ var Romeo = function (_Base) {
                 return currentPage.sync();
 
               case 10:
-                _context4.next = 12;
-                return newPage.getNewAddress();
-
-              case 12:
-                address = _context4.sent[0];
+                address = newPage.getCurrentAddress().address;
                 inputs = currentPage.getInputs(includeReuse);
                 value = inputs.reduce(function (t, i) {
                   return t + i.balance;
                 }, 0);
 
                 if (!(value > 0)) {
-                  _context4.next = 20;
+                  _context4.next = 18;
                   break;
                 }
 
-                _context4.next = 18;
+                _context4.next = 16;
                 return currentPage.sendTransfers([{ address: address, value: value }], inputs, 'Moving funds from the current page to the new one', 'Failed moving funds from the current page to the new one');
 
-              case 18:
-                _context4.next = 20;
+              case 16:
+                _context4.next = 18;
                 return newPage.syncTransactions();
 
-              case 20:
+              case 18:
+                this.onChange();
                 return _context4.abrupt('return', newPage);
 
-              case 21:
+              case 20:
               case 'end':
                 return _context4.stop();
             }
@@ -283,7 +283,7 @@ var Romeo = function (_Base) {
         }, _callee4, this);
       }));
 
-      function newPage(_x3) {
+      function newPage() {
         return _ref4.apply(this, arguments);
       }
 

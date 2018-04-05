@@ -60,6 +60,7 @@ class BasePage extends Base {
           keyIndex: keyIndex + startIndex,
           security: 2,
           balance: 0,
+          rawBalance: 0,
           spent: null,
           transactions: {}
         };
@@ -97,6 +98,7 @@ class BasePage extends Base {
                 `Attaching new addresses`,
                 'Could not attach new addresses'
               );
+              await this.syncAddresses(100);
               callback && (await callback(addresses));
               resolve(addresses);
             }

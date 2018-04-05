@@ -49,7 +49,7 @@ class Pages extends BasePage {
 
     addresses &&
       addresses.length &&
-      Object.values(this.pages).forEach(page => page.setCurrent(false));
+      Object.values(this.pages).forEach(page => page.page.setCurrent(false));
 
     addresses.forEach((address, keyIndex) => {
       if (!this.pages[address]) {
@@ -81,10 +81,13 @@ class Pages extends BasePage {
       }
     });
     if (currentPage) {
-      currentPage.init(false, 60).then(
-        () => Promise.all(otherPages.map(p => p.init()))
-      );
+      currentPage
+        .init(false, 60)
+        .then(() => Promise.all(otherPages.map(p => p.init())));
     }
+    Object.values(this.pages)
+      .sort((a, b) => b.keyIndex - a.keyIndex)[0]
+      .page.setCurrent(true);
     this.onChange();
   }
 
