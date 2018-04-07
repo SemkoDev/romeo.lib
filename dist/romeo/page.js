@@ -415,6 +415,7 @@ var Page = function (_BasePage) {
           _this5.log('Could not sync page balances', err);
           reject(err);
         });
+        _this5.onChange();
       });
     }
   }, {
@@ -482,6 +483,7 @@ var Page = function (_BasePage) {
           _this6.log('Could not sync page states', err);
           reject(err);
         });
+        _this6.onChange();
       });
     }
   }, {
@@ -557,6 +559,7 @@ var Page = function (_BasePage) {
           _this7.log('Could not sync page transactions', err);
           reject(err);
         });
+        _this7.onChange();
       });
     }
   }]);

@@ -242,6 +242,7 @@ var BasePage = function (_Base) {
           _this4.log('Could not add addresses', err);
           reject(err);
         });
+        _this4.onChange();
       });
     }
   }, {
@@ -326,6 +327,7 @@ var BasePage = function (_Base) {
           _this5.log('Could not sync page addresses', err);
           reject(err);
         });
+        _this5.onChange();
       });
     }
   }, {
@@ -365,6 +367,7 @@ var BasePage = function (_Base) {
           _this6.log(messageFail || 'Could not send transfer to the tangle', err);
           reject(err);
         });
+        _this6.onChange();
       });
     }
   }, {

@@ -115,6 +115,7 @@ class BasePage extends Base {
         this.log('Could not add addresses', err);
         reject(err);
       });
+      this.onChange();
     });
   }
 
@@ -167,6 +168,7 @@ class BasePage extends Base {
         this.log('Could not sync page addresses', err);
         reject(err);
       });
+      this.onChange();
     });
   }
 
@@ -205,6 +207,7 @@ class BasePage extends Base {
         this.log(messageFail || 'Could not send transfer to the tangle', err);
         reject(err);
       });
+      this.onChange();
     });
   }
 
