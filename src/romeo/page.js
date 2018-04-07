@@ -211,6 +211,7 @@ class Page extends BasePage {
         this.log('Could not sync page balances', err);
         reject(err);
       });
+      this.onChange();
     });
   }
 
@@ -253,6 +254,7 @@ class Page extends BasePage {
         this.log('Could not sync page states', err);
         reject(err);
       });
+      this.onChange();
     });
   }
 
@@ -303,6 +305,7 @@ class Page extends BasePage {
         this.log('Could not sync page transactions', err);
         reject(err);
       });
+      this.onChange();
     });
   }
 }
