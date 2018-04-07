@@ -25,7 +25,7 @@ class BasePage extends Base {
   }
 
   async init() {
-    return await this.sync();
+    return await this.sync(true);
   }
 
   async sync(force = false, priority) {

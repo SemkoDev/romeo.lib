@@ -51,7 +51,7 @@ var BasePage = function (_Base) {
             switch (_context.prev = _context.next) {
               case 0:
                 _context.next = 2;
-                return this.sync();
+                return this.sync(true);
 
               case 2:
                 return _context.abrupt('return', _context.sent);
