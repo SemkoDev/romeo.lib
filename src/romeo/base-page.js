@@ -24,15 +24,18 @@ class BasePage extends Base {
     this.addresses = {};
   }
 
-  async init() {
-    return await this.sync(true);
+  async init(force = true, priority) {
+    return await this.sync(force, priority);
   }
 
   async sync(force = false, priority) {
-    await this.syncAddresses(priority, force);
+    const { index } = this.opts;
+    if (!priority) {
+      priority = index + 1;
+    }
+    await this.syncAddresses(priority, !force);
     if (!Object.keys(this.addresses).length) {
       await this.getNewAddress();
-      await this.syncAddresses(priority, true);
     }
     return this;
   }

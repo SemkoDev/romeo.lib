@@ -82,7 +82,7 @@ class Pages extends BasePage {
     });
     if (currentPage) {
       currentPage
-        .init(true, 60)
+        .init(true, 6000)
         .then(() => Promise.all(otherPages.map(p => p.init())));
     }
     Object.values(this.pages)

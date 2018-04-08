@@ -35,4 +35,3 @@ AAJXXFJUEQHKPYIOUIUO9FWCMOAFBZAZPXIFRI9FLDQZJGHQENG9HNMODUZJCHR9RHHUSBHWJELGRDOW
 ## License
 
 This project is licensed under the ICS License - see the [LICENSE.md](LICENSE.md) file for details
-

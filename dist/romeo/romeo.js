@@ -89,7 +89,7 @@ var Romeo = function (_Base) {
 
               case 3:
                 _context.next = 5;
-                return this.pages.init();
+                return this.pages.init(false, 10000);
 
               case 5:
                 this.updater = setInterval(function () {
@@ -227,6 +227,7 @@ var Romeo = function (_Base) {
     value: function () {
       var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
         var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        var onCreate = arguments[1];
 
         var sourcePage, _opts$includeReuse, includeReuse, currentPage, newPage, address, inputs, value;
 
@@ -244,15 +245,17 @@ var Romeo = function (_Base) {
                 _context4.t1 = _context4.sent[0];
                 newPage = _context4.t0.getByAddress.call(_context4.t0, _context4.t1).page;
 
+                onCreate && onCreate(newPage);
+
                 if (currentPage.isSynced()) {
-                  _context4.next = 10;
+                  _context4.next = 11;
                   break;
                 }
 
-                _context4.next = 10;
+                _context4.next = 11;
                 return currentPage.sync();
 
-              case 10:
+              case 11:
                 address = newPage.getCurrentAddress().address;
                 inputs = currentPage.getInputs(includeReuse);
                 value = inputs.reduce(function (t, i) {
@@ -260,22 +263,22 @@ var Romeo = function (_Base) {
                 }, 0);
 
                 if (!(value > 0)) {
-                  _context4.next = 18;
+                  _context4.next = 19;
                   break;
                 }
 
-                _context4.next = 16;
+                _context4.next = 17;
                 return currentPage.sendTransfers([{ address: address, value: value }], inputs, 'Moving funds from the current page to the new one', 'Failed moving funds from the current page to the new one');
 
-              case 16:
-                _context4.next = 18;
+              case 17:
+                _context4.next = 19;
                 return newPage.syncTransactions();
 
-              case 18:
+              case 19:
                 this.onChange();
                 return _context4.abrupt('return', newPage);
 
-              case 20:
+              case 21:
               case 'end':
                 return _context4.stop();
             }

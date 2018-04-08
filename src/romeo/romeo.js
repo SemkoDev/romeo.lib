@@ -49,7 +49,7 @@ class Romeo extends Base {
     if (restoreString) {
       await this.db.restore(restoreString, true);
     }
-    await this.pages.init();
+    await this.pages.init(false, 10000);
     this.updater = setInterval(
       () => this.pages.syncCurrentPage(),
       this.opts.syncInterval
@@ -114,12 +114,13 @@ class Romeo extends Base {
     return await this.db.backup(true);
   }
 
-  async newPage(opts = {}) {
+  async newPage(opts = {}, onCreate) {
     const { sourcePage, includeReuse = false } = opts;
     const currentPage = sourcePage || this.pages.getCurrent();
 
     const newPage = this.pages.getByAddress((await this.pages.getNewPage())[0])
       .page;
+    onCreate && onCreate(newPage);
 
     if (!currentPage.isSynced()) {
       await currentPage.sync();

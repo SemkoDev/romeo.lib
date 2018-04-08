@@ -36,24 +36,19 @@ class Page extends BasePage {
   }
 
   async sync(force = false, priority) {
-    const { db, seed, isCurrent } = this.opts;
+    const { db, seed, isCurrent, index } = this.opts;
+    if (!priority) {
+      priority = index + 1;
+    }
     if (!this.isSyncing) {
       try {
         this.isSyncing = true;
         await this.syncAddresses(priority, !force);
-        if (!Object.keys(this.addresses).length) {
-          await this.syncAddresses(priority, false);
-          if (!Object.keys(this.addresses).length) {
-            await this.getNewAddress();
-            await this.syncAddresses(priority, false);
-          }
-        }
         // Auto-create a new unspent address
         if (!Object.values(this.addresses).find(a => !a.spent)) {
           await this.getNewAddress();
-          await this.syncAddresses(priority, false);
         }
-        await this.syncTransactions(priority, !force && !isCurrent);
+        await this.syncTransactions(priority, !force);
         await this.syncBalances(priority, !force);
         await this.syncSpent(priority, !force);
         this.isSyncing = false;
