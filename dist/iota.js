@@ -131,7 +131,7 @@ function createAPI(_ref) {
 
     db.get('addresses-' + seed).then(function (result) {
       onCache(null, result ? result : []);
-      if (cachedOnly) {
+      if (cachedOnly && result && result.length) {
         onLive(null, result ? result : []);
       } else {
         iota.api.getNewAddress(seed, { returnAll: true }, callback);
@@ -157,7 +157,9 @@ function createAPI(_ref) {
     };
 
     var findTransactions = function findTransactions() {
-      if (cachedOnly) {
+      var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+      if (cachedOnly && !force) {
         return;
       }
       iota.api.findTransactions({ addresses: [address] }, function (error, hashes) {
@@ -185,15 +187,16 @@ function createAPI(_ref) {
           })
         };
         onCache(null, result);
-        if (cachedOnly) {
+        if (cachedOnly && inclusions && inclusions.length) {
           onLive(null, result);
         } else {
-          findTransactions();
+          findTransactions(true);
         }
       }).catch(dbError);
     }).catch(dbError);
   }
 
+  // TODO: find a way to get Transactions for multiple addresses at once.
   function getTransactionObjects(address, onCache, onLive) {
     var cachedOnly = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
 

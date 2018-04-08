@@ -118,7 +118,7 @@ var Pages = function (_BasePage) {
         }
       });
       if (currentPage) {
-        currentPage.init(true, 60).then(function () {
+        currentPage.init(true, 6000).then(function () {
           return Promise.all(otherPages.map(function (p) {
             return p.init();
           }));

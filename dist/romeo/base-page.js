@@ -46,12 +46,14 @@ var BasePage = function (_Base) {
     key: 'init',
     value: function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+        var priority = arguments[1];
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
                 _context.next = 2;
-                return this.sync(true);
+                return this.sync(force, priority);
 
               case 2:
                 return _context.abrupt('return', _context.sent);
@@ -76,25 +78,27 @@ var BasePage = function (_Base) {
       var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
         var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
         var priority = arguments[1];
+        var index;
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                _context2.next = 2;
-                return this.syncAddresses(priority, force);
+                index = this.opts.index;
 
-              case 2:
+                if (!priority) {
+                  priority = index + 1;
+                }
+                _context2.next = 4;
+                return this.syncAddresses(priority, !force);
+
+              case 4:
                 if (Object.keys(this.addresses).length) {
                   _context2.next = 7;
                   break;
                 }
 
-                _context2.next = 5;
-                return this.getNewAddress();
-
-              case 5:
                 _context2.next = 7;
-                return this.syncAddresses(priority, true);
+                return this.getNewAddress();
 
               case 7:
                 return _context2.abrupt('return', this);
@@ -223,7 +227,7 @@ var BasePage = function (_Base) {
                 }, _callee3, _this4);
               }));
 
-              return function (_x4, _x5) {
+              return function (_x5, _x6) {
                 return _ref3.apply(this, arguments);
               };
             }());
@@ -307,7 +311,7 @@ var BasePage = function (_Base) {
                 }, _callee4, _this5);
               }));
 
-              return function (_x6, _x7) {
+              return function (_x7, _x8) {
                 return _ref4.apply(this, arguments);
               };
             }(), cachedOnly);
@@ -397,7 +401,7 @@ var BasePage = function (_Base) {
           }, _callee5, _this7);
         }));
 
-        return function (_x8) {
+        return function (_x9) {
           return _ref5.apply(this, arguments);
         };
       }())).then(function (res) {
@@ -433,7 +437,7 @@ var BasePage = function (_Base) {
         }, _callee6, this);
       }));
 
-      function restoreMissingAddresses(_x9, _x10, _x11) {
+      function restoreMissingAddresses(_x10, _x11, _x12) {
         return _ref6.apply(this, arguments);
       }
 
