@@ -79,7 +79,9 @@ var Pages = function (_BasePage) {
           iota = _opts.iota,
           db = _opts.db;
 
-      var startIndex = Object.keys(this.pages).length;
+      var startIndex = Object.keys(this.pages).filter(function (e) {
+        return !addresses.includes(e);
+      }).length;
       var currentPage = null;
       var otherPages = [];
 
@@ -117,6 +119,9 @@ var Pages = function (_BasePage) {
           }
         }
       });
+      Object.values(this.pages).sort(function (a, b) {
+        return b.keyIndex - a.keyIndex;
+      })[0].page.setCurrent(true);
       if (currentPage) {
         currentPage.init(true, 6000).then(function () {
           return Promise.all(otherPages.map(function (p) {
@@ -124,9 +129,6 @@ var Pages = function (_BasePage) {
           }));
         });
       }
-      Object.values(this.pages).sort(function (a, b) {
-        return b.keyIndex - a.keyIndex;
-      })[0].page.setCurrent(true);
       this.onChange();
     }
   }, {

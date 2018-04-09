@@ -166,9 +166,13 @@ var Romeo = function (_Base) {
           ready = this.ready;
 
       return {
-        keys: keys,
-        jobs: Object.values(jobs),
-        genericJobs: pages.getJobs(),
+        keys: Object.assign({}, keys),
+        jobs: Object.values(jobs).map(function (j) {
+          return Object.assign({}, j);
+        }),
+        genericJobs: pages.getJobs().map(function (j) {
+          return Object.assign({}, j);
+        }),
         pages: pages.asJson(),
         isOnline: isOnline,
         checkingOnline: checkingOnline,
@@ -268,11 +272,11 @@ var Romeo = function (_Base) {
                 }
 
                 _context4.next = 17;
-                return currentPage.sendTransfers([{ address: address, value: value }], inputs, 'Moving funds from the current page to the new one', 'Failed moving funds from the current page to the new one');
+                return currentPage.sendTransfers([{ address: address, value: value }], inputs, 'Moving funds to the new page', 'Failed moving funds!');
 
               case 17:
-                _context4.next = 19;
-                return newPage.syncTransactions();
+                currentPage.syncTransactions();
+                newPage.syncTransactions();
 
               case 19:
                 this.onChange();
