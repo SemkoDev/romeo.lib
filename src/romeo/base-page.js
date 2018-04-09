@@ -24,7 +24,7 @@ class BasePage extends Base {
     this.addresses = {};
   }
 
-  async init(force = true, priority) {
+  async init(force = false, priority) {
     return await this.sync(force, priority);
   }
 
@@ -46,8 +46,8 @@ class BasePage extends Base {
       index,
       isCurrent,
       seed,
-      addresses: this.addresses,
-      jobs: this.getJobs()
+      addresses: Object.assign({}, this.addresses),
+      jobs: this.getJobs().map(j => Object.assign({}, j))
     };
   }
 
@@ -101,7 +101,10 @@ class BasePage extends Base {
                 `Attaching new addresses`,
                 'Could not attach new addresses'
               );
-              await this.syncAddresses(100);
+              await this.syncAddresses(
+                this.opts.index, false,
+                total + Object.keys(this.addresses).length
+              );
               callback && (await callback(addresses));
               resolve(addresses);
             }
@@ -113,7 +116,10 @@ class BasePage extends Base {
         type: 'NEW_ADDRESS',
         description: `Adding new addresses`
       });
-      job.on('finish', resolve);
+      job.on('finish', result => {
+        this.onChange();
+        resolve(result);
+      });
       job.on('failed', err => {
         this.log('Could not add addresses', err);
         reject(err);
@@ -122,7 +128,7 @@ class BasePage extends Base {
     });
   }
 
-  syncAddresses(priority, cachedOnly) {
+  syncAddresses(priority, cachedOnly, total) {
     const { iota, seed, queue, index, isCurrent } = this.opts;
 
     return new Promise((resolve, reject) => {
@@ -152,7 +158,8 @@ class BasePage extends Base {
                 this.applyAddresses(addresses);
               resolve(this);
             },
-            cachedOnly
+            cachedOnly,
+            total
           );
         });
 
@@ -166,7 +173,10 @@ class BasePage extends Base {
           cachedOnly
         }
       );
-      job.on('finish', resolve);
+      job.on('finish', result => {
+        this.onChange();
+        resolve(result);
+      });
       job.on('failed', err => {
         this.log('Could not sync page addresses', err);
         reject(err);
@@ -217,16 +227,11 @@ class BasePage extends Base {
   restoreAddresses(addresses, message, messageFail) {
     message = message || `Restoring addresses`;
     messageFail = messageFail || 'Could not restore the addresses';
-    return Promise.all(
-      addresses.map(
-        async address =>
-          await this.sendTransfers(
-            [{ address, value: 0 }],
-            null,
-            message,
-            messageFail
-          )
-      )
+    return this.sendTransfers(
+      addresses.map(address => ({ address, value: 0 })),
+      null,
+      message,
+      messageFail
     ).then(res => {
       this.onChange();
       return res;

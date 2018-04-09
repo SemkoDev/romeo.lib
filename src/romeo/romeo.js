@@ -84,9 +84,9 @@ class Romeo extends Base {
       ready
     } = this;
     return {
-      keys,
-      jobs: Object.values(jobs),
-      genericJobs: pages.getJobs(),
+      keys: Object.assign({}, keys),
+      jobs: Object.values(jobs).map(j => Object.assign({}, j)),
+      genericJobs: pages.getJobs().map(j => Object.assign({}, j)),
       pages: pages.asJson(),
       isOnline,
       checkingOnline,
@@ -132,10 +132,11 @@ class Romeo extends Base {
       await currentPage.sendTransfers(
         [{ address, value }],
         inputs,
-        'Moving funds from the current page to the new one',
-        'Failed moving funds from the current page to the new one'
+        'Moving funds to the new page',
+        'Failed moving funds!'
       );
-      await newPage.syncTransactions();
+      currentPage.syncTransactions();
+      newPage.syncTransactions();
     }
     this.onChange();
     return newPage;

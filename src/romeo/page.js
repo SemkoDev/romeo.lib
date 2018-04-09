@@ -45,7 +45,7 @@ class Page extends BasePage {
         this.isSyncing = true;
         await this.syncAddresses(priority, !force);
         // Auto-create a new unspent address
-        if (!Object.values(this.addresses).find(a => !a.spent)) {
+        if (isCurrent && !Object.values(this.addresses).find(a => !a.spent)) {
           await this.getNewAddress();
         }
         await this.syncTransactions(priority, !force);
@@ -82,7 +82,7 @@ class Page extends BasePage {
 
   asJson() {
     const { lastSynced, isSyncing } = this;
-    return Object.assign(super.asJson(), {
+    return Object.assign({}, super.asJson(), {
       lastSynced,
       isSyncing,
       balance: this.getBalance(),
@@ -201,7 +201,10 @@ class Page extends BasePage {
           cachedOnly
         }
       );
-      job.on('finish', resolve);
+      job.on('finish', result => {
+        this.onChange();
+        resolve(result);
+      });
       job.on('failed', err => {
         this.log('Could not sync page balances', err);
         reject(err);
@@ -244,7 +247,10 @@ class Page extends BasePage {
           cachedOnly
         }
       );
-      job.on('finish', resolve);
+      job.on('finish', result => {
+        this.onChange();
+        resolve(result);
+      });
       job.on('failed', err => {
         this.log('Could not sync page states', err);
         reject(err);

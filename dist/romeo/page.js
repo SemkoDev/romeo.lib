@@ -128,9 +128,9 @@ var Page = function (_BasePage) {
                 return this.syncAddresses(priority, !force);
 
               case 7:
-                if (Object.values(this.addresses).find(function (a) {
+                if (!(isCurrent && !Object.values(this.addresses).find(function (a) {
                   return !a.spent;
-                })) {
+                }))) {
                   _context2.next = 10;
                   break;
                 }
@@ -215,7 +215,7 @@ var Page = function (_BasePage) {
       var lastSynced = this.lastSynced,
           isSyncing = this.isSyncing;
 
-      return Object.assign(_get(Page.prototype.__proto__ || Object.getPrototypeOf(Page.prototype), 'asJson', this).call(this), {
+      return Object.assign({}, _get(Page.prototype.__proto__ || Object.getPrototypeOf(Page.prototype), 'asJson', this).call(this), {
         lastSynced: lastSynced,
         isSyncing: isSyncing,
         balance: this.getBalance(),
@@ -388,7 +388,10 @@ var Page = function (_BasePage) {
         }),
             job = _queue$add.job;
 
-        job.on('finish', resolve);
+        job.on('finish', function (result) {
+          _this5.onChange();
+          resolve(result);
+        });
         job.on('failed', function (err) {
           _this5.log('Could not sync page balances', err);
           reject(err);
@@ -456,7 +459,10 @@ var Page = function (_BasePage) {
         }),
             job = _queue$add2.job;
 
-        job.on('finish', resolve);
+        job.on('finish', function (result) {
+          _this6.onChange();
+          resolve(result);
+        });
         job.on('failed', function (err) {
           _this6.log('Could not sync page states', err);
           reject(err);

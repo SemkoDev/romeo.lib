@@ -97,7 +97,7 @@ function createAPI({ path, password, provider, database }) {
       });
   }
 
-  function getAddresses(seed, onCache, onLive, cachedOnly = false) {
+  function getAddresses(seed, onCache, onLive, cachedOnly = false, total) {
     const callback = (error, results) => {
       if (error) {
         return onLive(error, null);
@@ -115,12 +115,12 @@ function createAPI({ path, password, provider, database }) {
         if (cachedOnly && result && result.length) {
           onLive(null, result ? result : []);
         } else {
-          iota.api.getNewAddress(seed, { returnAll: true }, callback);
+          iota.api.getNewAddress(seed, { returnAll: true, total }, callback);
         }
       })
       .catch(error => {
         onCache(error, null);
-        iota.api.getNewAddress(seed, { returnAll: true }, callback);
+        iota.api.getNewAddress(seed, { returnAll: true, total }, callback);
       });
   }
 

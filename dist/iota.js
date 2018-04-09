@@ -118,6 +118,7 @@ function createAPI(_ref) {
 
   function getAddresses(seed, onCache, onLive) {
     var cachedOnly = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+    var total = arguments[4];
 
     var callback = function callback(error, results) {
       if (error) {
@@ -134,11 +135,11 @@ function createAPI(_ref) {
       if (cachedOnly && result && result.length) {
         onLive(null, result ? result : []);
       } else {
-        iota.api.getNewAddress(seed, { returnAll: true }, callback);
+        iota.api.getNewAddress(seed, { returnAll: true, total: total }, callback);
       }
     }).catch(function (error) {
       onCache(error, null);
-      iota.api.getNewAddress(seed, { returnAll: true }, callback);
+      iota.api.getNewAddress(seed, { returnAll: true, total: total }, callback);
     });
   }
 

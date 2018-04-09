@@ -3,7 +3,7 @@ const MemoryStore = require('better-queue-memory');
 const { createIdentifier } = require('./utils');
 
 const DEFAULT_OPTIONS = {
-  checkOnline: require('is-online'),
+  checkOnline: async () => true, //require('is-online'),
   onChange: queue => {}
 };
 

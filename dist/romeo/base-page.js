@@ -46,7 +46,7 @@ var BasePage = function (_Base) {
     key: 'init',
     value: function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-        var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+        var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
         var priority = arguments[1];
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
@@ -129,8 +129,10 @@ var BasePage = function (_Base) {
         index: index,
         isCurrent: isCurrent,
         seed: seed,
-        addresses: this.addresses,
-        jobs: this.getJobs()
+        addresses: Object.assign({}, this.addresses),
+        jobs: this.getJobs().map(function (j) {
+          return Object.assign({}, j);
+        })
       };
     }
   }, {
@@ -203,7 +205,7 @@ var BasePage = function (_Base) {
 
                       case 5:
                         _context3.next = 7;
-                        return _this4.syncAddresses(100);
+                        return _this4.syncAddresses(_this4.opts.index, false, total + Object.keys(_this4.addresses).length);
 
                       case 7:
                         _context3.t0 = callback;
@@ -241,7 +243,10 @@ var BasePage = function (_Base) {
         }),
             job = _queue$add.job;
 
-        job.on('finish', resolve);
+        job.on('finish', function (result) {
+          _this4.onChange();
+          resolve(result);
+        });
         job.on('failed', function (err) {
           _this4.log('Could not add addresses', err);
           reject(err);
@@ -251,7 +256,7 @@ var BasePage = function (_Base) {
     }
   }, {
     key: 'syncAddresses',
-    value: function syncAddresses(priority, cachedOnly) {
+    value: function syncAddresses(priority, cachedOnly, total) {
       var _this5 = this;
 
       var _opts3 = this.opts,
@@ -314,7 +319,7 @@ var BasePage = function (_Base) {
               return function (_x7, _x8) {
                 return _ref4.apply(this, arguments);
               };
-            }(), cachedOnly);
+            }(), cachedOnly, total);
           });
         };
 
@@ -326,7 +331,10 @@ var BasePage = function (_Base) {
         }),
             job = _queue$add2.job;
 
-        job.on('finish', resolve);
+        job.on('finish', function (result) {
+          _this5.onChange();
+          resolve(result);
+        });
         job.on('failed', function (err) {
           _this5.log('Could not sync page addresses', err);
           reject(err);
@@ -381,30 +389,9 @@ var BasePage = function (_Base) {
 
       message = message || 'Restoring addresses';
       messageFail = messageFail || 'Could not restore the addresses';
-      return Promise.all(addresses.map(function () {
-        var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(address) {
-          return regeneratorRuntime.wrap(function _callee5$(_context5) {
-            while (1) {
-              switch (_context5.prev = _context5.next) {
-                case 0:
-                  _context5.next = 2;
-                  return _this7.sendTransfers([{ address: address, value: 0 }], null, message, messageFail);
-
-                case 2:
-                  return _context5.abrupt('return', _context5.sent);
-
-                case 3:
-                case 'end':
-                  return _context5.stop();
-              }
-            }
-          }, _callee5, _this7);
-        }));
-
-        return function (_x9) {
-          return _ref5.apply(this, arguments);
-        };
-      }())).then(function (res) {
+      return this.sendTransfers(addresses.map(function (address) {
+        return { address: address, value: 0 };
+      }), null, message, messageFail).then(function (res) {
         _this7.onChange();
         return res;
       });
@@ -412,33 +399,33 @@ var BasePage = function (_Base) {
   }, {
     key: 'restoreMissingAddresses',
     value: function () {
-      var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(total, message, messageFail) {
+      var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(total, message, messageFail) {
         var addresses;
-        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                _context6.next = 2;
+                _context5.next = 2;
                 return this.getNewAddress(total);
 
               case 2:
-                addresses = _context6.sent;
-                _context6.next = 5;
+                addresses = _context5.sent;
+                _context5.next = 5;
                 return this.restoreAddresses(addresses, message, messageFail);
 
               case 5:
-                return _context6.abrupt('return', _context6.sent);
+                return _context5.abrupt('return', _context5.sent);
 
               case 6:
               case 'end':
-                return _context6.stop();
+                return _context5.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee5, this);
       }));
 
-      function restoreMissingAddresses(_x10, _x11, _x12) {
-        return _ref6.apply(this, arguments);
+      function restoreMissingAddresses(_x9, _x10, _x11) {
+        return _ref5.apply(this, arguments);
       }
 
       return restoreMissingAddresses;
