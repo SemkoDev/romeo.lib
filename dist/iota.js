@@ -1,6 +1,9 @@
 'use strict';
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
 var IOTA = require('iota.lib.js');
+var async = require('async');
 
 var _require = require('./db'),
     Database = _require.Database;
@@ -12,7 +15,8 @@ function createAPI(_ref) {
   var path = _ref.path,
       password = _ref.password,
       provider = _ref.provider,
-      database = _ref.database;
+      database = _ref.database,
+      guard = _ref.guard;
 
   var db = database || new Database({ path: path, password: password });
   var iota = new IOTA({ provider: provider || IOTA_API_ENDPOINT });
@@ -135,11 +139,11 @@ function createAPI(_ref) {
       if (cachedOnly && result && result.length) {
         onLive(null, result ? result : []);
       } else {
-        iota.api.getNewAddress(seed, { returnAll: true, total: total }, callback);
+        _getNewAddress(iota.api, guard, seed, 0, total, callback);
       }
     }).catch(function (error) {
       onCache(error, null);
-      iota.api.getNewAddress(seed, { returnAll: true, total: total }, callback);
+      _getNewAddress(iota.api, guard, seed, 0, total, callback);
     });
   }
 
@@ -243,7 +247,19 @@ function createAPI(_ref) {
     getTransactions(address, process(), process(true), cachedOnly);
   }
 
+  function getNewAddress(pageIndex, index, total, callback) {
+    if (!guard) throw new Error('guard has not been set up!');
+    _getNewAddress(iota.api, guard, pageIndex, index, total, callback, false);
+  }
+
+  function sendTransfer(pageIndex, depth, minWeightMagnitude, transfers, options, callback) {
+    if (!guard) throw new Error('guard has not been set up!');
+    _sendTransfer(iota.api, guard, pageIndex, depth, minWeightMagnitude, transfers, options, callback);
+  }
+
   iota.api.ext = {
+    sendTransfer: sendTransfer,
+    getNewAddress: getNewAddress,
     getBalances: getBalances,
     getAddresses: getAddresses,
     getTransactions: getTransactions,
@@ -253,6 +269,183 @@ function createAPI(_ref) {
   };
 
   return iota;
+}
+
+function _getNewAddress(api, guard, seedOrPageIndex, index, total, callback) {
+  var _this = this;
+
+  var returnAll = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
+
+  if (!guard) {
+    api.getNewAddress(seedOrPageIndex, { returnAll: returnAll, total: total }, callback);
+  } else {
+    var getter = seedOrPageIndex < 0 ? guard.getPages.bind(guard) : function (i, t) {
+      return guard.getAddresses(seedOrPageIndex, i, t);
+    };
+    _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+      var allAddresses;
+      return regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              allAddresses = [];
+
+              // Case 1: total
+              //
+              // If total number of addresses to generate is supplied, simply generate
+              // and return the list of all addresses
+
+              if (!total) {
+                _context.next = 9;
+                break;
+              }
+
+              _context.t0 = callback;
+              _context.next = 5;
+              return getter(index, total);
+
+            case 5:
+              _context.t1 = _context.sent;
+              return _context.abrupt('return', (0, _context.t0)(null, _context.t1));
+
+            case 9:
+              async.doWhilst(function (callback) {
+                // Iteratee function
+                getter(index, 1).then(function (addresses) {
+                  var newAddress = addresses[0];
+
+                  if (returnAll) {
+                    allAddresses.push(newAddress);
+                  }
+
+                  // Increase the index
+                  index += 1;
+
+                  api.wereAddressesSpentFrom(newAddress, function (err, res) {
+                    if (err) {
+                      return callback(err);
+                    }
+
+                    // Validity check
+                    if (res[0]) {
+                      callback(null, newAddress, true);
+                    } else {
+                      // Check for txs if address isn't spent
+                      api.findTransactions({ 'addresses': [newAddress] }, function (err, transactions) {
+                        if (err) {
+                          return callback(err);
+                        }
+                        callback(err, newAddress, transactions.length > 0);
+                      });
+                    }
+                  });
+                });
+              }, function (address, isUsed) {
+                return isUsed;
+              }, function (err, address) {
+                if (err) {
+                  return callback(err);
+                } else {
+                  return callback(null, returnAll ? allAddresses : address);
+                }
+              });
+
+            case 10:
+            case 'end':
+              return _context.stop();
+          }
+        }
+      }, _callee, _this);
+    }))();
+  }
+}
+
+function _sendTransfer(api, guard, seedOrPageIndex, depth, minWeightMagnitude, transfers, options, callback) {
+  var _this2 = this;
+
+  if (!guard) {
+    return api.sendTransfer(seedOrPageIndex, depth, minWeightMagnitude, transfers, options, callback);
+  }
+
+  _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+    var inputs, totalValue, remainder, trytes;
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            _context2.prev = 0;
+            inputs = options.inputs;
+            totalValue = transfers.reduce(function (t, i) {
+              return t + i.value;
+            }, 0);
+
+            if (!(totalValue > 0 && !options.inputs)) {
+              _context2.next = 5;
+              break;
+            }
+
+            return _context2.abrupt('return', callback(new Error('No inputs for guard send provided!')));
+
+          case 5:
+            if (!(totalValue > 0)) {
+              _context2.next = 14;
+              break;
+            }
+
+            _context2.t1 = options.address;
+
+            if (_context2.t1) {
+              _context2.next = 11;
+              break;
+            }
+
+            _context2.next = 10;
+            return function () {
+              return new Promise(function (resolve) {
+                _getNewAddress(api, guard, seedOrPageIndex, 0, 1, function (error, address) {
+                  if (error) throw error;
+                  resolve(address);
+                }, false);
+              });
+            }();
+
+          case 10:
+            _context2.t1 = _context2.sent;
+
+          case 11:
+            _context2.t0 = _context2.t1;
+            _context2.next = 15;
+            break;
+
+          case 14:
+            _context2.t0 = null;
+
+          case 15:
+            remainder = _context2.t0;
+            _context2.next = 18;
+            return guard.getSignedTransactions(seedOrPageIndex, transfers, inputs, remainder);
+
+          case 18:
+            trytes = _context2.sent;
+
+
+            api.sendTrytes(trytes, depth, minWeightMagnitude, options, callback);
+            _context2.next = 25;
+            break;
+
+          case 22:
+            _context2.prev = 22;
+            _context2.t2 = _context2['catch'](0);
+
+            callback(_context2.t2);
+
+          case 25:
+          case 'end':
+            return _context2.stop();
+        }
+      }
+    }, _callee2, _this2, [[0, 22]]);
+  }))();
 }
 
 module.exports = createAPI;

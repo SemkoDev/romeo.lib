@@ -1,8 +1,9 @@
 const IOTA = require('iota.lib.js');
+const async = require('async');
 const { Database } = require('./db');
 const { IOTA_API_ENDPOINT } = require('./config');
 
-function createAPI({ path, password, provider, database }) {
+function createAPI({ path, password, provider, database, guard }) {
   const db = database || new Database({ path, password });
   const iota = new IOTA({ provider: provider || IOTA_API_ENDPOINT });
   const getTrytes = iota.api.getTrytes.bind(iota.api);
@@ -115,12 +116,12 @@ function createAPI({ path, password, provider, database }) {
         if (cachedOnly && result && result.length) {
           onLive(null, result ? result : []);
         } else {
-          iota.api.getNewAddress(seed, { returnAll: true, total }, callback);
+          _getNewAddress(iota.api, guard, seed, 0, total, callback);
         }
       })
       .catch(error => {
         onCache(error, null);
-        iota.api.getNewAddress(seed, { returnAll: true, total }, callback);
+        _getNewAddress(iota.api, guard, seed, 0, total, callback);
       });
   }
 
@@ -220,7 +221,19 @@ function createAPI({ path, password, provider, database }) {
     getTransactions(address, process(), process(true), cachedOnly);
   }
 
+  function getNewAddress (pageIndex, index, total, callback) {
+    if (!guard) throw new Error('guard has not been set up!');
+    _getNewAddress(iota.api, guard, pageIndex, index, total, callback, false);
+  }
+
+  function sendTransfer (pageIndex, depth, minWeightMagnitude, transfers, options, callback) {
+    if (!guard) throw new Error('guard has not been set up!');
+    _sendTransfer(iota.api, guard, pageIndex, depth, minWeightMagnitude, transfers, options, callback);
+  }
+
   iota.api.ext = {
+    sendTransfer,
+    getNewAddress,
     getBalances,
     getAddresses,
     getTransactions,
@@ -230,6 +243,109 @@ function createAPI({ path, password, provider, database }) {
   };
 
   return iota;
+}
+
+function _getNewAddress (api, guard, seedOrPageIndex, index, total, callback, returnAll = true) {
+  if (!guard) {
+    api.getNewAddress(seedOrPageIndex, { returnAll, total }, callback);
+  } else {
+    const getter = seedOrPageIndex < 0
+      ? guard.getPages.bind(guard)
+      : (i, t) => guard.getAddresses(seedOrPageIndex, i, t);
+    (async () => {
+      const allAddresses = [];
+
+      // Case 1: total
+      //
+      // If total number of addresses to generate is supplied, simply generate
+      // and return the list of all addresses
+      if (total) {
+        return callback(null, await getter(index, total));
+      }
+      //  Case 2: no total provided
+      //
+      //  Continue calling wasAddressSpenFrom & findTransactions to see if address was already created
+      //  if null, return list of addresses
+      //
+      else {
+        async.doWhilst(function(callback) {
+          // Iteratee function
+          getter(index, 1).then(addresses => {
+            const newAddress = addresses[0];
+
+            if (returnAll) {
+              allAddresses.push(newAddress)
+            }
+
+            // Increase the index
+            index += 1;
+
+            api.wereAddressesSpentFrom(newAddress, function (err, res) {
+              if (err) {
+                return callback(err)
+              }
+
+              // Validity check
+              if (res[0]) {
+                callback(null, newAddress, true)
+              } else { // Check for txs if address isn't spent
+                api.findTransactions({'addresses': [newAddress]}, function (err, transactions) {
+                  if (err) {
+                    return callback(err)
+                  }
+                  callback(err, newAddress, transactions.length > 0)
+                })
+              }
+            })
+          });
+
+        }, function (address, isUsed) {
+          return isUsed
+        }, function(err, address) {
+          if (err) {
+            return callback(err);
+          } else {
+            return callback(null, returnAll ? allAddresses : address);
+          }
+        })
+      }
+    })();
+  }
+}
+
+function _sendTransfer (api, guard, seedOrPageIndex, depth, minWeightMagnitude, transfers, options, callback) {
+  if (!guard) {
+    return api.sendTransfer(seedOrPageIndex, depth, minWeightMagnitude, transfers, options, callback);
+  }
+
+  (async () => {
+    try {
+      const { inputs } = options;
+      const totalValue = transfers.reduce((t, i) => t + i.value, 0);
+      if (totalValue > 0 && !options.inputs)
+        return callback(new Error('No inputs for guard send provided!'));
+      const remainder = totalValue > 0
+        ? (options.address ||
+          await (() => new Promise(resolve => {
+            _getNewAddress(
+              api, guard, seedOrPageIndex, 0, 1,
+              (error, address) => {
+                if (error) throw error;
+                resolve(address);
+              },
+              false);
+          }))())
+        : null;
+
+      const trytes = await guard.getSignedTransactions(
+        seedOrPageIndex, transfers, inputs, remainder);
+
+      api.sendTrytes(trytes, depth, minWeightMagnitude, options, callback);
+    }
+    catch (err) {
+      callback(err);
+    }
+  })();
 }
 
 module.exports = createAPI;

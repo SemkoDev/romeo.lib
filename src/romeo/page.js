@@ -6,7 +6,7 @@ const DEFAULT_OPTIONS = {
   index: 1,
   isCurrent: true,
   queue: null,
-  seed: null,
+  guard: null,
   iota: null,
   db: null
 };
@@ -27,16 +27,16 @@ class Page extends BasePage {
   }
 
   async init(force = false, priority) {
-    const { db, seed } = this.opts;
+    const { db, index } = this.opts;
     if (db) {
-      const timestamp = await db.get(`lastsynced-${seed}`);
+      const timestamp = await db.get(`lastsynced-${index}`);
       this.lastSynced = timestamp ? new Date(timestamp) : null;
     }
     return await this.sync(force, priority);
   }
 
   async sync(force = false, priority) {
-    const { db, seed, isCurrent, index } = this.opts;
+    const { db, index, isCurrent } = this.opts;
     if (!priority) {
       priority = index + 1;
     }
@@ -54,7 +54,7 @@ class Page extends BasePage {
         this.isSyncing = false;
         this.lastSynced = isCurrent || force ? new Date() : this.lastSynced;
         if (db) {
-          await db.put(`lastsynced-${seed}`, this.lastSynced);
+          await db.put(`lastsynced-${index}`, this.lastSynced);
           this.onChange();
         }
       } catch (e) {

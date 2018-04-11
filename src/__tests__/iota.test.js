@@ -1,6 +1,7 @@
 const tmp = require('tmp');
 const { expect } = require('chai');
 const crypto = require('../crypto');
+const { SimpleGuard } = require('../guard');
 const createAPI = require('../iota');
 
 tmp.setGracefulCleanup();
@@ -10,7 +11,9 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 describe('api.iota', () => {
-  const keys = crypto.keys.getKeys('Maximilian', 'Mustermann999!');
+  const username = 'Maximilian';
+  const password = 'Mustermann999!!!!--++';
+  const keys = crypto.keys.getKeys(username, password);
 
   it('should get trytes correctly', done => {
     const iota = createAPI({
@@ -156,6 +159,74 @@ describe('api.iota', () => {
             done();
           }
         );
+      }
+    );
+  });
+
+  it('ext guard getAddresses', done => {
+    const guard = new SimpleGuard({ username, password});
+    const iota = guard.setupIOTA({ path: tmp.dirSync().name });
+    const seed = 1; // page Number
+
+    iota.api.ext.getAddresses(
+      seed,
+      (error, addresses) => {
+        expect(error).to.be.null;
+        expect(addresses.length).to.equal(0);
+      },
+      (error, addresses) => {
+        expect(error).to.be.null;
+        expect(addresses.length).to.be.above(0);
+
+        iota.api.ext.getAddresses(
+          seed,
+          (error, addresses2) => {
+            expect(error).to.be.null;
+            expect(addresses2.length).to.equal(addresses.length);
+          },
+          (error, addresses2) => {
+            expect(error).to.be.null;
+            expect(addresses2).to.deep.equal(addresses);
+            done();
+          },
+          false, 2
+        );
+      },
+      false, 2
+    );
+  });
+
+  it('ext guard getNewAddresses', done => {
+    const guard = new SimpleGuard({ username, password});
+    const iota = guard.setupIOTA({ path: tmp.dirSync().name });
+
+    iota.api.ext.getNewAddress(
+      1, 0, 2,
+      (error, addresses) => {
+        expect(error).to.be.null;
+        expect(addresses.length).to.equal(2);
+        done();
+      }
+    );
+  });
+
+  it('ext guard sendTransfer', done => {
+    const guard = new SimpleGuard({ username, password});
+    const iota = guard.setupIOTA({ path: tmp.dirSync().name });
+    const transfers = [{
+      address: 'FHA'.repeat(27),
+      value: 0,
+      tag: 'HELLO9WORLD'
+    }];
+    const options = {};
+
+    iota.api.ext.sendTransfer(
+      1, 4, 14, transfers, options,
+      (error, trytes) => {
+        expect(error).to.be.null;
+        expect(trytes).to.have.length(1);
+        expect(trytes[0].hash).to.have.length(81);
+        done();
       }
     );
   });

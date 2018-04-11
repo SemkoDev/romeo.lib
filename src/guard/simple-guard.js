@@ -20,6 +20,17 @@ class SimpleGuard extends BaseGuard {
     this.pageAddresses = {};
   }
 
+  getPageSeed (pageIndex) {
+    const cachedPageAddress = this.pageAddresses[pageIndex];
+    return cachedPageAddress
+      ? crypto.keys.getSeed(cachedPageAddress, this.keys.password)
+      : null;
+  }
+
+  getChecksum () {
+    return this.keys.checksum;
+  }
+
   getSymmetricKey () {
     return this.keys.password;
   }
@@ -59,10 +70,11 @@ class SimpleGuard extends BaseGuard {
   /**
    * Returns page seed by index
    * @param index
-   * @returns {Promise<*>}
+   * @returns {Promise<string>}
    * @private
    */
   async _getPageSeed (index) {
+    if (index < 0) return this.seed;
     return crypto.keys.getSeed(
       await this._getPageAddressByIndex(index),
       this.keys.password);

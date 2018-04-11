@@ -1,8 +1,7 @@
 const { expect } = require('chai');
 const tmp = require('tmp');
-const crypto = require('../../crypto');
+const { SimpleGuard } = require('../../guard');
 const createQueue = require('../../queue');
-const createAPI = require('../../iota');
 const { Page } = require('../page');
 
 process.on('unhandledRejection', (reason, p) => {
@@ -11,22 +10,23 @@ process.on('unhandledRejection', (reason, p) => {
 
 
 describe('Romeo Page', () => {
-  const keys = crypto.keys.getKeys('Maximilian', 'Mustermann999!!!!!');
-  const seed = 'AAAVGP9TVQZWPWXDSUQDOBGGHCADNZDUSRIQGAGZQWRNJKSRFOMYYJXHPZ9LKPVLLFYPCFVJYERCKWAAA';
+  const username = 'Maximilian';
+  const password = 'Mustermann999!--+';
+  let guard = null;
   let iota = null;
   let queue = null;
 
   beforeEach(() => {
-    iota = createAPI({
-      path: tmp.dirSync().name,
-      password: keys.password
+    guard = new SimpleGuard({ username, password });
+    iota = guard.setupIOTA({
+      path: tmp.dirSync().name
     });
     queue = createQueue();
   });
 
   it('should init correctly', (done) => {
     const page = new Page({
-      seed, queue, iota,
+      queue, iota, guard
       //onLog: (log) => console.log('onLog', log),
       //onChange: (page) => {} // console.log('onChange', JSON.stringify(page.addresses, null, 4))
     });
@@ -37,7 +37,7 @@ describe('Romeo Page', () => {
 
   it('should send transfers', (done) => {
     const page = new Page({
-      seed, queue, iota,
+      queue, iota, guard
       //onLog: (log) => console.log('onLog', log),
       //onChange: (page) => {} // console.log('onChange', JSON.stringify(page.addresses, null, 4))
     });
@@ -54,7 +54,7 @@ describe('Romeo Page', () => {
 
   it('should get new address', (done) => {
     const page = new Page({
-      seed, queue, iota,
+      queue, iota, guard
       //onLog: (log) => console.log('onLog', log),
       //onChange: (page) => {} // console.log('onChange', JSON.stringify(page.addresses, null, 4))
     });

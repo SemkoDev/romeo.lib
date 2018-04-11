@@ -26,7 +26,7 @@ var DEFAULT_OPTIONS = {
   index: 1,
   isCurrent: true,
   queue: null,
-  seed: null,
+  guard: null,
   iota: null,
   db: null
 };
@@ -55,13 +55,13 @@ var Page = function (_BasePage) {
         var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
         var priority = arguments[1];
 
-        var _opts, db, seed, timestamp;
+        var _opts, db, index, timestamp;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                _opts = this.opts, db = _opts.db, seed = _opts.seed;
+                _opts = this.opts, db = _opts.db, index = _opts.index;
 
                 if (!db) {
                   _context.next = 6;
@@ -69,7 +69,7 @@ var Page = function (_BasePage) {
                 }
 
                 _context.next = 4;
-                return db.get('lastsynced-' + seed);
+                return db.get('lastsynced-' + index);
 
               case 4:
                 timestamp = _context.sent;
@@ -104,13 +104,13 @@ var Page = function (_BasePage) {
         var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
         var priority = arguments[1];
 
-        var _opts2, db, seed, isCurrent, index;
+        var _opts2, db, index, isCurrent;
 
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                _opts2 = this.opts, db = _opts2.db, seed = _opts2.seed, isCurrent = _opts2.isCurrent, index = _opts2.index;
+                _opts2 = this.opts, db = _opts2.db, index = _opts2.index, isCurrent = _opts2.isCurrent;
 
                 if (!priority) {
                   priority = index + 1;
@@ -160,7 +160,7 @@ var Page = function (_BasePage) {
                 }
 
                 _context2.next = 21;
-                return db.put('lastsynced-' + seed, this.lastSynced);
+                return db.put('lastsynced-' + index, this.lastSynced);
 
               case 21:
                 this.onChange();
