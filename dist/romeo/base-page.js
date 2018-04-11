@@ -21,7 +21,7 @@ var DEFAULT_OPTIONS = {
   index: 1,
   isCurrent: true,
   queue: null,
-  seed: null,
+  guard: null,
   iota: null
 };
 
@@ -123,12 +123,12 @@ var BasePage = function (_Base) {
       var _opts = this.opts,
           index = _opts.index,
           isCurrent = _opts.isCurrent,
-          seed = _opts.seed;
+          guard = _opts.guard;
 
       return {
         index: index,
         isCurrent: isCurrent,
-        seed: seed,
+        seed: guard.getPageSeed(index),
         addresses: Object.assign({}, this.addresses),
         jobs: this.getJobs().map(function (j) {
           return Object.assign({}, j);
@@ -177,7 +177,6 @@ var BasePage = function (_Base) {
       var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       var _opts2 = this.opts,
           iota = _opts2.iota,
-          seed = _opts2.seed,
           queue = _opts2.queue,
           index = _opts2.index,
           isCurrent = _opts2.isCurrent;
@@ -186,10 +185,7 @@ var BasePage = function (_Base) {
       return new Promise(function (resolve, reject) {
         var addressPromise = function addressPromise() {
           return new Promise(function (resolve, reject) {
-            iota.api.getNewAddress(seed, {
-              index: Object.keys(_this4.addresses).length,
-              total: total
-            }, function () {
+            iota.api.ext.getNewAddress(index, Object.keys(_this4.addresses).length, total, function () {
               var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(err, addresses) {
                 return regeneratorRuntime.wrap(function _callee3$(_context3) {
                   while (1) {
@@ -205,7 +201,7 @@ var BasePage = function (_Base) {
 
                       case 5:
                         _context3.next = 7;
-                        return _this4.syncAddresses(_this4.opts.index, false, total + Object.keys(_this4.addresses).length);
+                        return _this4.syncAddresses(index, false, Object.keys(_this4.addresses).length);
 
                       case 7:
                         _context3.t0 = callback;
@@ -261,7 +257,6 @@ var BasePage = function (_Base) {
 
       var _opts3 = this.opts,
           iota = _opts3.iota,
-          seed = _opts3.seed,
           queue = _opts3.queue,
           index = _opts3.index,
           isCurrent = _opts3.isCurrent;
@@ -272,7 +267,7 @@ var BasePage = function (_Base) {
 
         var addressPromise = function addressPromise() {
           return new Promise(function (resolve, reject) {
-            iota.api.ext.getAddresses(seed, function (err, addresses) {
+            iota.api.ext.getAddresses(index, function (err, addresses) {
               if (!err) {
                 cached = addresses;
                 _this5.applyAddresses(addresses);
@@ -349,7 +344,6 @@ var BasePage = function (_Base) {
 
       var _opts4 = this.opts,
           iota = _opts4.iota,
-          seed = _opts4.seed,
           queue = _opts4.queue,
           index = _opts4.index,
           isCurrent = _opts4.isCurrent;
@@ -357,7 +351,7 @@ var BasePage = function (_Base) {
 
       var sendPromise = function sendPromise() {
         return new Promise(function (resolve, reject) {
-          iota.api.sendTransfer(seed, IOTA_DEPTH, IOTA_MWM, transfers, { inputs: inputs }, function (err, result) {
+          iota.api.ext.sendTransfer(index, IOTA_DEPTH, IOTA_MWM, transfers, { inputs: inputs }, function (err, result) {
             if (err) {
               return reject(err);
             }

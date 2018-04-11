@@ -16,13 +16,11 @@ var _require = require('./base-page'),
 var _require2 = require('./page'),
     Page = _require2.Page;
 
-var crypto = require('../crypto');
-
 var DEFAULT_OPTIONS = {
   index: -1,
   isCurrent: true,
   queue: null,
-  keys: null,
+  guard: null,
   iota: null,
   db: null
 };
@@ -36,11 +34,6 @@ var Pages = function (_BasePage) {
     var opts = Object.assign({}, DEFAULT_OPTIONS, {
       logIdent: 'PAGE #' + (options.index || DEFAULT_OPTIONS.index)
     }, options);
-    var _opts$keys = opts.keys,
-        ledger = _opts$keys.ledger,
-        password = _opts$keys.password;
-
-    opts.seed = crypto.keys.getSeed(ledger, password);
 
     var _this = _possibleConstructorReturn(this, (Pages.__proto__ || Object.getPrototypeOf(Pages)).call(this, opts));
 
@@ -74,10 +67,10 @@ var Pages = function (_BasePage) {
       var _this2 = this;
 
       var _opts = this.opts,
-          password = _opts.keys.password,
           queue = _opts.queue,
           iota = _opts.iota,
-          db = _opts.db;
+          db = _opts.db,
+          guard = _opts.guard;
 
       var startIndex = Object.keys(this.pages).filter(function (e) {
         return !addresses.includes(e);
@@ -95,20 +88,19 @@ var Pages = function (_BasePage) {
 
           var index = keyIndex + startIndex;
           var isCurrent = keyIndex === addresses.length - 1;
-          var seed = crypto.keys.getSeed(address, password);
           var page = new Page({
             db: db,
             queue: queue,
             iota: iota,
             index: index,
-            seed: seed,
+            guard: guard,
             isCurrent: isCurrent,
             onChange: onChange
           });
 
           _this2.pages[address] = {
             address: address,
-            seed: seed,
+            seed: guard.getPageSeed(index),
             keyIndex: index,
             page: page
           };

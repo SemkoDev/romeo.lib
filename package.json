@@ -10,23 +10,31 @@
     "type": "git",
     "url": "https://github.com/SemkoDev/romeo.lib.git"
   },
-  "files": ["src", "dist", "README.md", "LICENSE.md"],
-  "keywords": ["blockchain", "IOTA", "tangle", "p2p"],
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "keywords": [
+    "blockchain",
+    "IOTA",
+    "tangle",
+    "p2p"
+  ],
   "watch": {
-    "dist": "{src}/*.js"
+    "dist": "{src,test}/**/*.js"
   },
   "scripts": {
-    "test":
-      "mocha --timeout 240000 --bail --ui bdd $(find src -name \"*.test.js\")",
+    "test": "mocha --timeout 240000 --bail --ui bdd $(find src -name \"*.test.js\")",
     "clean": "rimraf dist",
-    "fix":
-      "prettier --single-quote --write index.js src/*.js src/**/*.js package.json *.md",
-    "dist":
-      "babel ./src --out-dir dist/ --ignore ./node_modules --ignore __tests__ --copy-files",
+    "fix": "prettier --single-quote --write index.js src/*.js src/**/*.js package.json *.md",
+    "dist": "babel ./src --out-dir dist/ --ignore ./node_modules --ignore __tests__ --copy-files",
     "make": "npm run clean && npm run fix && npm run dist",
     "watch": "npm-watch"
   },
   "dependencies": {
+    "async": "^2.6.0",
     "better-queue": "^3.8.6",
     "better-queue-memory": "^1.0.2",
     "iota.lib.js": "^0.4.7",

@@ -50,10 +50,30 @@ class BaseGuard {
    */
   setupIOTA (options) {
     this.iota = createAPI(Object.assign({}, options, {
-      password: this.getSymmetricKey()
+      password: this.getSymmetricKey(),
+      guard: this
     }));
-    // TODO: inject getSignedTransactions into iota api
     return this.iota;
+  }
+
+  /**
+   * For guards that allow returning seeds.
+   * Otherwise, do not override.
+   * @param pageIndex
+   * @returns {string|null}
+   */
+  getPageSeed (pageIndex) {
+    return null;
+  }
+
+  /**
+   * For guards that return a 3-char checksum.
+   * Otherwise, do not override.
+   * @param pageIndex
+   * @returns {string|null}
+   */
+  getChecksum () {
+    return null;
   }
 
   /**
@@ -184,6 +204,8 @@ class BaseGuard {
    * @private
    */
   async _getSignedTransactions (transfers, inputs, remainder) {
+    // IMPORTANT: if the activePageIndex is < 0,
+    // then it is a TX for the ledger seed!
     throw new Error('not implemented!');
   }
 }

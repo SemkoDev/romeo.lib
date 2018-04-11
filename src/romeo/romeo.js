@@ -1,15 +1,12 @@
 const { Base } = require('./base');
-const crypto = require('../crypto');
 const createQueue = require('../queue');
-const createAPI = require('../iota');
 const { Database } = require('../db');
 const { Pages } = require('./pages');
 
 const DEFAULT_OPTIONS = {
-  username: null,
-  password: null,
   syncInterval: 60000,
-  dbPath: 'romeo'
+  dbPath: 'romeo',
+  guard: null
 };
 
 class Romeo extends Base {
@@ -23,16 +20,19 @@ class Romeo extends Base {
       options
     );
     super(opts);
+    if (!this.opts.guard) throw new Error('No guard provided!');
+    this.guard = this.opts.guard;
     this.ready = false;
     this.isOnline = 1;
     this.checkingOnline = false;
     this.opts = opts;
-    this.keys = crypto.keys.getKeys(opts.username, opts.password);
-    this.db = new Database({ path: opts.dbPath, password: this.keys.password });
-    this.iota = createAPI({ database: this.db });
+    this.db = new Database({
+      path: opts.dbPath,
+      password: this.guard.getSymmetricKey() });
+    this.iota = this.guard.setupIOTA({ database: this.db });
     this.queue = createQueue();
     this.pages = new Pages({
-      keys: this.keys,
+      guard: this.guard,
       queue: this.queue,
       iota: this.iota,
       db: this.db,
@@ -77,14 +77,12 @@ class Romeo extends Base {
   asJson() {
     const {
       queue: { jobs },
-      keys,
       pages,
       isOnline,
       checkingOnline,
       ready
     } = this;
     return {
-      keys: Object.assign({}, keys),
       jobs: Object.values(jobs).map(j => Object.assign({}, j)),
       genericJobs: pages.getJobs().map(j => Object.assign({}, j)),
       pages: pages.asJson(),

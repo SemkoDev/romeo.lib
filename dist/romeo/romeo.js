@@ -15,9 +15,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var _require = require('./base'),
     Base = _require.Base;
 
-var crypto = require('../crypto');
 var createQueue = require('../queue');
-var createAPI = require('../iota');
 
 var _require2 = require('../db'),
     Database = _require2.Database;
@@ -26,10 +24,9 @@ var _require3 = require('./pages'),
     Pages = _require3.Pages;
 
 var DEFAULT_OPTIONS = {
-  username: null,
-  password: null,
   syncInterval: 60000,
-  dbPath: 'romeo'
+  dbPath: 'romeo',
+  guard: null
 };
 
 var Romeo = function (_Base) {
@@ -44,16 +41,19 @@ var Romeo = function (_Base) {
 
     var _this = _possibleConstructorReturn(this, (Romeo.__proto__ || Object.getPrototypeOf(Romeo)).call(this, opts));
 
+    if (!_this.opts.guard) throw new Error('No guard provided!');
+    _this.guard = _this.opts.guard;
     _this.ready = false;
     _this.isOnline = 1;
     _this.checkingOnline = false;
     _this.opts = opts;
-    _this.keys = crypto.keys.getKeys(opts.username, opts.password);
-    _this.db = new Database({ path: opts.dbPath, password: _this.keys.password });
-    _this.iota = createAPI({ database: _this.db });
+    _this.db = new Database({
+      path: opts.dbPath,
+      password: _this.guard.getSymmetricKey() });
+    _this.iota = _this.guard.setupIOTA({ database: _this.db });
     _this.queue = createQueue();
     _this.pages = new Pages({
-      keys: _this.keys,
+      guard: _this.guard,
       queue: _this.queue,
       iota: _this.iota,
       db: _this.db,
@@ -159,14 +159,12 @@ var Romeo = function (_Base) {
     key: 'asJson',
     value: function asJson() {
       var jobs = this.queue.jobs,
-          keys = this.keys,
           pages = this.pages,
           isOnline = this.isOnline,
           checkingOnline = this.checkingOnline,
           ready = this.ready;
 
       return {
-        keys: Object.assign({}, keys),
         jobs: Object.values(jobs).map(function (j) {
           return Object.assign({}, j);
         }),

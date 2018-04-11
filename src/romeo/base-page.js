@@ -5,7 +5,7 @@ const DEFAULT_OPTIONS = {
   index: 1,
   isCurrent: true,
   queue: null,
-  seed: null,
+  guard: null,
   iota: null
 };
 
@@ -41,11 +41,11 @@ class BasePage extends Base {
   }
 
   asJson() {
-    const { index, isCurrent, seed } = this.opts;
+    const { index, isCurrent, guard } = this.opts;
     return {
       index,
       isCurrent,
-      seed,
+      seed: guard.getPageSeed(index),
       addresses: Object.assign({}, this.addresses),
       jobs: this.getJobs().map(j => Object.assign({}, j))
     };
@@ -79,17 +79,15 @@ class BasePage extends Base {
   }
 
   getNewAddress(total = 1, callback = null) {
-    const { iota, seed, queue, index, isCurrent } = this.opts;
+    const { iota, queue, index, isCurrent } = this.opts;
 
     return new Promise((resolve, reject) => {
       const addressPromise = () =>
         new Promise((resolve, reject) => {
-          iota.api.getNewAddress(
-            seed,
-            {
-              index: Object.keys(this.addresses).length,
-              total
-            },
+          iota.api.ext.getNewAddress(
+            index,
+            Object.keys(this.addresses).length,
+            total,
             async (err, addresses) => {
               if (err) {
                 reject(err);
@@ -102,8 +100,8 @@ class BasePage extends Base {
                 'Could not attach new addresses'
               );
               await this.syncAddresses(
-                this.opts.index, false,
-                total + Object.keys(this.addresses).length
+                index, false,
+                Object.keys(this.addresses).length
               );
               callback && (await callback(addresses));
               resolve(addresses);
@@ -129,7 +127,8 @@ class BasePage extends Base {
   }
 
   syncAddresses(priority, cachedOnly, total) {
-    const { iota, seed, queue, index, isCurrent } = this.opts;
+
+    const { iota, queue, index, isCurrent } = this.opts;
 
     return new Promise((resolve, reject) => {
       let cached = [];
@@ -137,7 +136,7 @@ class BasePage extends Base {
       const addressPromise = () =>
         new Promise((resolve, reject) => {
           iota.api.ext.getAddresses(
-            seed,
+            index,
             (err, addresses) => {
               if (!err) {
                 cached = addresses;
@@ -186,12 +185,12 @@ class BasePage extends Base {
   }
 
   sendTransfers(transfers, inputs, message, messageFail, priority) {
-    const { iota, seed, queue, index, isCurrent } = this.opts;
+    const { iota, queue, index, isCurrent } = this.opts;
 
     const sendPromise = () =>
       new Promise((resolve, reject) => {
-        iota.api.sendTransfer(
-          seed,
+        iota.api.ext.sendTransfer(
+          index,
           IOTA_DEPTH,
           IOTA_MWM,
           transfers,

@@ -1,12 +1,11 @@
 const { BasePage } = require('./base-page');
 const { Page } = require('./page');
-const crypto = require('../crypto');
 
 const DEFAULT_OPTIONS = {
   index: -1,
   isCurrent: true,
   queue: null,
-  keys: null,
+  guard: null,
   iota: null,
   db: null
 };
@@ -21,8 +20,6 @@ class Pages extends BasePage {
       },
       options
     );
-    const { keys: { ledger, password } } = opts;
-    opts.seed = crypto.keys.getSeed(ledger, password);
     super(opts);
     this.pages = this.addresses;
     this.getNewPage = this.getNewAddress;
@@ -42,7 +39,7 @@ class Pages extends BasePage {
   }
 
   applyAddresses(addresses) {
-    const { keys: { password }, queue, iota, db } = this.opts;
+    const { queue, iota, db, guard } = this.opts;
     const startIndex = Object.keys(this.pages)
       .filter(e => !addresses.includes(e)).length;
     let currentPage = null;
@@ -57,20 +54,19 @@ class Pages extends BasePage {
         const { onChange } = this;
         const index = keyIndex + startIndex;
         const isCurrent = keyIndex === addresses.length - 1;
-        const seed = crypto.keys.getSeed(address, password);
         const page = new Page({
           db,
           queue,
           iota,
           index,
-          seed,
+          guard,
           isCurrent,
           onChange
         });
 
         this.pages[address] = {
           address,
-          seed,
+          seed: guard.getPageSeed(index),
           keyIndex: index,
           page
         };
