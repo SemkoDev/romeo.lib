@@ -211,16 +211,19 @@ var BaseGuard = function () {
                         while (1) {
                           switch (_context3.prev = _context3.next) {
                             case 0:
-                              _this3._setActivePage(pageIndex);
+                              _context3.next = 2;
+                              return _this3._setActivePage(pageIndex);
+
+                            case 2:
                               _context3.t0 = resolve;
-                              _context3.next = 4;
+                              _context3.next = 5;
                               return _this3._getAddresses(index, total);
 
-                            case 4:
+                            case 5:
                               _context3.t1 = _context3.sent;
                               (0, _context3.t0)(_context3.t1);
 
-                            case 6:
+                            case 7:
                             case 'end':
                               return _context3.stop();
                           }
@@ -338,9 +341,28 @@ var BaseGuard = function () {
 
   }, {
     key: '_setActivePage',
-    value: function _setActivePage(pageIndex) {
-      this.activePageIndex = pageIndex;
-    }
+    value: function () {
+      var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(pageIndex) {
+        return regeneratorRuntime.wrap(function _callee7$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                this.activePageIndex = pageIndex;
+
+              case 1:
+              case 'end':
+                return _context7.stop();
+            }
+          }
+        }, _callee7, this);
+      }));
+
+      function _setActivePage(_x16) {
+        return _ref7.apply(this, arguments);
+      }
+
+      return _setActivePage;
+    }()
 
     /**
      * Actual method to get page-addresses.
@@ -354,23 +376,23 @@ var BaseGuard = function () {
   }, {
     key: '_getPages',
     value: function () {
-      var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(index, total) {
-        return regeneratorRuntime.wrap(function _callee7$(_context7) {
+      var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(index, total) {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
                 throw new Error('not implemented!');
 
               case 1:
               case 'end':
-                return _context7.stop();
+                return _context8.stop();
             }
           }
-        }, _callee7, this);
+        }, _callee8, this);
       }));
 
-      function _getPages(_x16, _x17) {
-        return _ref7.apply(this, arguments);
+      function _getPages(_x17, _x18) {
+        return _ref8.apply(this, arguments);
       }
 
       return _getPages;
@@ -388,23 +410,23 @@ var BaseGuard = function () {
   }, {
     key: '_getAddresses',
     value: function () {
-      var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(index, total) {
-        return regeneratorRuntime.wrap(function _callee8$(_context8) {
+      var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(index, total) {
+        return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context8.prev = _context8.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 throw new Error('not implemented!');
 
               case 1:
               case 'end':
-                return _context8.stop();
+                return _context9.stop();
             }
           }
-        }, _callee8, this);
+        }, _callee9, this);
       }));
 
-      function _getAddresses(_x18, _x19) {
-        return _ref8.apply(this, arguments);
+      function _getAddresses(_x19, _x20) {
+        return _ref9.apply(this, arguments);
       }
 
       return _getAddresses;
@@ -423,23 +445,23 @@ var BaseGuard = function () {
   }, {
     key: '_getSignedTransactions',
     value: function () {
-      var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(transfers, inputs, remainder) {
-        return regeneratorRuntime.wrap(function _callee9$(_context9) {
+      var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(transfers, inputs, remainder) {
+        return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
                 throw new Error('not implemented!');
 
               case 1:
               case 'end':
-                return _context9.stop();
+                return _context10.stop();
             }
           }
-        }, _callee9, this);
+        }, _callee10, this);
       }));
 
-      function _getSignedTransactions(_x20, _x21, _x22) {
-        return _ref9.apply(this, arguments);
+      function _getSignedTransactions(_x21, _x22, _x23) {
+        return _ref10.apply(this, arguments);
       }
 
       return _getSignedTransactions;

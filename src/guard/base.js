@@ -118,7 +118,7 @@ class BaseGuard {
    */
   async getAddresses (pageIndex, index, total, priority = 1) {
     const promiseFactory = () => new Promise (async (resolve) => {
-      this._setActivePage(pageIndex);
+      await this._setActivePage(pageIndex);
       resolve(await this._getAddresses(index, total));
     });
 
@@ -166,7 +166,7 @@ class BaseGuard {
    * @param {int} pageIndex
    * @private
    */
-  _setActivePage (pageIndex) {
+  async _setActivePage (pageIndex) {
     this.activePageIndex = pageIndex;
   }
 
