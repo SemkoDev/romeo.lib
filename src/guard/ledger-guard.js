@@ -33,6 +33,8 @@ class LedgerGuard extends BaseGuard {
     if (opts.debug) {
       transport.setDebugMode(true);
     }
+    // wait 1 min for result
+    transport.setExchangeTimeout(60000);
     const hwapp = new AppIota(transport);
 
     await LedgerGuard._setInternalSeed(hwapp, 2);

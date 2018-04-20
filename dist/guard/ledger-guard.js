@@ -216,7 +216,7 @@ var LedgerGuard = function (_BaseGuard) {
                 }
 
                 _context4.next = 11;
-                return _getSignedLedgerTransactions(transfers, inputs, remainder);
+                return this._getSignedLedgerTransactions(transfers, inputs, remainder);
 
               case 11:
                 return _context4.abrupt('return', _context4.sent);
@@ -276,7 +276,7 @@ var LedgerGuard = function (_BaseGuard) {
 
                 // pad transfer tags
                 transfers.forEach(function (t) {
-                  return t.tag = t.tag.padEnd(27, '9');
+                  return t.tag = t.tag ? t.tag.padEnd(27, '9') : EMPTY_TAG;
                 });
                 // set correct security level
                 inputs.forEach(function (i) {
@@ -346,7 +346,7 @@ var LedgerGuard = function (_BaseGuard) {
     key: '_getGenericAddresses',
     value: function () {
       var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(index, total) {
-        var addresses, i, keyIndex;
+        var addresses, i, keyIndex, address;
         return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
@@ -356,33 +356,31 @@ var LedgerGuard = function (_BaseGuard) {
 
               case 2:
                 if (!(i < total)) {
-                  _context6.next = 13;
+                  _context6.next = 12;
                   break;
                 }
 
                 keyIndex = index + i;
-
-                if (this.opts.debug) {
-                  console.log('getGenericAddress; index=%i', keyIndex);
-                }
-                _context6.t0 = addresses;
-                _context6.next = 8;
+                _context6.next = 6;
                 return this.hwapp.getPubKey(keyIndex);
 
-              case 8:
-                _context6.t1 = _context6.sent;
+              case 6:
+                address = _context6.sent;
 
-                _context6.t0.push.call(_context6.t0, _context6.t1);
+                if (this.opts.debug) {
+                  console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
+                }
+                addresses.push(address);
 
-              case 10:
+              case 9:
                 i++;
                 _context6.next = 2;
                 break;
 
-              case 13:
+              case 12:
                 return _context6.abrupt('return', addresses);
 
-              case 14:
+              case 13:
               case 'end':
                 return _context6.stop();
             }
@@ -468,19 +466,21 @@ var LedgerGuard = function (_BaseGuard) {
                 if (opts.debug) {
                   transport.setDebugMode(true);
                 }
+                // wait 1 min for result
+                transport.setExchangeTimeout(60000);
                 hwapp = new _hwAppIota2.default(transport);
-                _context8.next = 8;
+                _context8.next = 9;
                 return LedgerGuard._setInternalSeed(hwapp, 2);
 
-              case 8:
-                _context8.next = 10;
+              case 9:
+                _context8.next = 11;
                 return hwapp.getPubKey(0);
 
-              case 10:
+              case 11:
                 keyAddress = _context8.sent;
                 return _context8.abrupt('return', new LedgerGuard(hwapp, keyAddress.substr(0, 32), opts));
 
-              case 12:
+              case 13:
               case 'end':
                 return _context8.stop();
             }
