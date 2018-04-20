@@ -328,7 +328,7 @@ function _sendTransfer (api, guard, seedOrPageIndex, depth, minWeightMagnitude, 
         ? (options.address ||
           await (() => new Promise(resolve => {
             _getNewAddress(
-              api, guard, seedOrPageIndex, 0, 1,
+              api, guard, seedOrPageIndex, 0, null,
               (error, address) => {
                 if (error) throw error;
                 resolve(address);
