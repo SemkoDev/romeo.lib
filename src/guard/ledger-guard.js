@@ -102,7 +102,11 @@ class LedgerGuard extends BaseGuard {
         };
       }
 
-      return await _getSignedLedgerTransactions(transfers, inputs, remainder);
+      return await this._getSignedLedgerTransactions(
+        transfers,
+        inputs,
+        remainder
+      );
     }
 
     // no inputs use the regular iota lib with a dummy seed
@@ -130,7 +134,7 @@ class LedgerGuard extends BaseGuard {
     inputs.forEach(i => (i.address = noChecksum(i.address)));
 
     // pad transfer tags
-    transfers.forEach(t => (t.tag = t.tag.padEnd(27, '9')));
+    transfers.forEach(t => (t.tag = t.tag ? t.tag.padEnd(27, '9') : EMPTY_TAG));
     // set correct security level
     inputs.forEach(i => (i.security = this.opts.security));
 
@@ -186,10 +190,11 @@ class LedgerGuard extends BaseGuard {
     var addresses = [];
     for (var i = 0; i < total; i++) {
       const keyIndex = index + i;
+      const address = await this.hwapp.getPubKey(keyIndex);
       if (this.opts.debug) {
-        console.log('getGenericAddress; index=%i', keyIndex);
+        console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
       }
-      addresses.push(await this.hwapp.getPubKey(keyIndex));
+      addresses.push(address);
     }
 
     return addresses;
