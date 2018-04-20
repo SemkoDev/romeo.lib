@@ -402,7 +402,7 @@ function _sendTransfer(api, guard, seedOrPageIndex, depth, minWeightMagnitude, t
             _context2.next = 10;
             return function () {
               return new Promise(function (resolve) {
-                _getNewAddress(api, guard, seedOrPageIndex, 0, 1, function (error, address) {
+                _getNewAddress(api, guard, seedOrPageIndex, 0, null, function (error, address) {
                   if (error) throw error;
                   resolve(address);
                 }, false);
