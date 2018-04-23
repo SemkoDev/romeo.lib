@@ -140,7 +140,7 @@ var SimpleGuard = function (_BaseGuard) {
 
               case 2:
                 seed = _context3.sent;
-                options = { inputs: inputs, address: remainderAddress };
+                options = { inputs: inputs, address: remainderAddress.address };
                 _context3.next = 6;
                 return function () {
                   return new Promise(function (resolve, reject) {
