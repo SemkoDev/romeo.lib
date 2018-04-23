@@ -53,7 +53,7 @@ class SimpleGuard extends BaseGuard {
     // We do not need to do any fancy stuff here, because we have the
     // seeds at hand. :)
     const seed = await this._getPageSeed(this.activePageIndex);
-    const options = { inputs, address: remainderAddress };
+    const options = { inputs, address: remainderAddress.address };
     return await (() => new Promise((resolve, reject) => {
       this.iota.api.prepareTransfers(
         seed, transfers, options,
