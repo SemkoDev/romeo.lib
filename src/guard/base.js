@@ -67,6 +67,24 @@ class BaseGuard {
   }
 
   /**
+   * Return max number of outputs, apart of inputs, that the guard supports for transfers.
+   * 0 = unlimited
+   * @returns {number}
+   */
+  getMaxOutputs () {
+    return 6;
+  }
+
+  /**
+   * Return max number of outputs, apart of inputs, that the guard supports for transfers.
+   * 0 = unlimited
+   * @returns {number}
+   */
+  getMaxInputs () {
+    return 6;
+  }
+
+  /**
    * For guards that return a 3-char checksum.
    * Otherwise, do not override.
    * @param pageIndex
@@ -199,7 +217,7 @@ class BaseGuard {
    * Should be overridden!
    * @param {Object[]} transfers
    * @param {Object[]} inputs
-   * @param {Object} remainder
+   * @param {Object} remainder: { address, keyIndex }
    * @returns {Promise<string[]>}
    * @private
    */

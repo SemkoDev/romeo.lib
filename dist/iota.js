@@ -328,25 +328,25 @@ function _getNewAddress(api, guard, seedOrPageIndex, index, total, callback) {
 
                     // Validity check
                     if (res[0]) {
-                      callback(null, newAddress, true);
+                      callback(null, newAddress, true, index - 1);
                     } else {
                       // Check for txs if address isn't spent
                       api.findTransactions({ 'addresses': [newAddress] }, function (err, transactions) {
                         if (err) {
                           return callback(err);
                         }
-                        callback(err, newAddress, transactions.length > 0);
+                        callback(err, newAddress, transactions.length > 0, index - 1);
                       });
                     }
                   });
                 });
               }, function (address, isUsed) {
                 return isUsed;
-              }, function (err, address) {
+              }, function (err, address, isUsed, index) {
                 if (err) {
                   return callback(err);
                 } else {
-                  return callback(null, returnAll ? allAddresses : address);
+                  return callback(null, returnAll ? allAddresses : address, index);
                 }
               });
 
@@ -368,83 +368,85 @@ function _sendTransfer(api, guard, seedOrPageIndex, depth, minWeightMagnitude, t
   }
 
   _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
-    var inputs, totalValue, remainder, trytes;
+    var index, inputs, totalValue, remainder, trytes;
     return regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
-            _context2.prev = 0;
+            index = options.addressIndex;
+            _context2.prev = 1;
             inputs = options.inputs;
             totalValue = transfers.reduce(function (t, i) {
               return t + i.value;
             }, 0);
 
             if (!(totalValue > 0 && !options.inputs)) {
-              _context2.next = 5;
+              _context2.next = 6;
               break;
             }
 
             return _context2.abrupt('return', callback(new Error('No inputs for guard send provided!')));
 
-          case 5:
+          case 6:
             if (!(totalValue > 0)) {
-              _context2.next = 14;
+              _context2.next = 15;
               break;
             }
 
             _context2.t1 = options.address;
 
             if (_context2.t1) {
-              _context2.next = 11;
+              _context2.next = 12;
               break;
             }
 
-            _context2.next = 10;
+            _context2.next = 11;
             return function () {
               return new Promise(function (resolve) {
-                _getNewAddress(api, guard, seedOrPageIndex, 0, 1, function (error, address) {
+                _getNewAddress(api, guard, seedOrPageIndex, 0, 1, function (error, address, addressIndex) {
                   if (error) throw error;
+                  index = addressIndex;
                   resolve(address);
                 }, false);
               });
             }();
 
-          case 10:
+          case 11:
             _context2.t1 = _context2.sent;
 
-          case 11:
+          case 12:
             _context2.t0 = _context2.t1;
-            _context2.next = 15;
+            _context2.next = 16;
             break;
 
-          case 14:
+          case 15:
             _context2.t0 = null;
 
-          case 15:
+          case 16:
             remainder = _context2.t0;
-            _context2.next = 18;
-            return guard.getSignedTransactions(seedOrPageIndex, transfers, inputs, remainder);
+            _context2.next = 19;
+            return guard.getSignedTransactions(seedOrPageIndex, transfers, inputs, { address: remainder, keyIndex: index });
 
-          case 18:
+          case 19:
             trytes = _context2.sent;
 
 
             api.sendTrytes(trytes, depth, minWeightMagnitude, options, callback);
-            _context2.next = 25;
+            _context2.next = 26;
             break;
 
-          case 22:
-            _context2.prev = 22;
-            _context2.t2 = _context2['catch'](0);
+          case 23:
+            _context2.prev = 23;
+            _context2.t2 = _context2['catch'](1);
 
             callback(_context2.t2);
 
-          case 25:
+          case 26:
           case 'end':
             return _context2.stop();
         }
       }
-    }, _callee2, _this2, [[0, 22]]);
+    }, _callee2, _this2, [[1, 23]]);
   }))();
 }
 

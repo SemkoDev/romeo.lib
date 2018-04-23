@@ -287,13 +287,13 @@ function _getNewAddress (api, guard, seedOrPageIndex, index, total, callback, re
 
               // Validity check
               if (res[0]) {
-                callback(null, newAddress, true)
+                callback(null, newAddress, true, index - 1)
               } else { // Check for txs if address isn't spent
                 api.findTransactions({'addresses': [newAddress]}, function (err, transactions) {
                   if (err) {
                     return callback(err)
                   }
-                  callback(err, newAddress, transactions.length > 0)
+                  callback(err, newAddress, transactions.length > 0, index - 1)
                 })
               }
             })
@@ -301,11 +301,11 @@ function _getNewAddress (api, guard, seedOrPageIndex, index, total, callback, re
 
         }, function (address, isUsed) {
           return isUsed
-        }, function(err, address) {
+        }, function(err, address, isUsed, index) {
           if (err) {
             return callback(err);
           } else {
-            return callback(null, returnAll ? allAddresses : address);
+            return callback(null, returnAll ? allAddresses : address, index);
           }
         })
       }
@@ -319,6 +319,7 @@ function _sendTransfer (api, guard, seedOrPageIndex, depth, minWeightMagnitude, 
   }
 
   (async () => {
+    let index = options.addressIndex;
     try {
       const { inputs } = options;
       const totalValue = transfers.reduce((t, i) => t + i.value, 0);
@@ -329,8 +330,9 @@ function _sendTransfer (api, guard, seedOrPageIndex, depth, minWeightMagnitude, 
           await (() => new Promise(resolve => {
             _getNewAddress(
               api, guard, seedOrPageIndex, 0, 1,
-              (error, address) => {
+              (error, address, addressIndex) => {
                 if (error) throw error;
+                index = addressIndex
                 resolve(address);
               },
               false);
@@ -338,7 +340,7 @@ function _sendTransfer (api, guard, seedOrPageIndex, depth, minWeightMagnitude, 
         : null;
 
       const trytes = await guard.getSignedTransactions(
-        seedOrPageIndex, transfers, inputs, remainder);
+        seedOrPageIndex, transfers, inputs, { address: remainder, keyIndex: index });
 
       api.sendTrytes(trytes, depth, minWeightMagnitude, options, callback);
     }
