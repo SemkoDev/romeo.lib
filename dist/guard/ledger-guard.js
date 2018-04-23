@@ -150,27 +150,19 @@ var LedgerGuard = function (_BaseGuard) {
 
       return _getAddresses;
     }()
-
-    // TODO: remainder should be an object with address and keyIndex
-
   }, {
     key: '_getSignedTransactions',
     value: function () {
-      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(transfers, inputs, remainderAddress) {
+      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(transfers, inputs, remainder) {
         var _this2 = this;
 
-        var remainder, balance, payment, maxInputIndex, options;
+        var balance, payment, options;
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                // TODO: why is the remainderAddress an array?
-                if (Array.isArray(remainderAddress)) {
-                  remainderAddress = remainderAddress[0];
-                }
-                inputs = inputs || [];
-
                 // filter unnecessary inputs
+                inputs = inputs || [];
                 inputs = inputs.filter(function (input) {
                   return input.balance > 0;
                 });
@@ -182,53 +174,40 @@ var LedgerGuard = function (_BaseGuard) {
                 // the ledger is only needed, if there are proper inputs
 
                 if (!(Array.isArray(inputs) && inputs.length)) {
-                  _context4.next = 12;
+                  _context4.next = 8;
                   break;
                 }
 
-                if (!(inputs.length > 2 || transfers.length > 1)) {
-                  _context4.next = 7;
-                  break;
-                }
-
-                throw new Error('Only one output and two inputs supported');
-
-              case 7:
-                remainder = {};
-
-                if (remainderAddress) {
+                if (remainder) {
                   balance = inputs.reduce(function (a, i) {
                     return a + i.balance;
                   }, 0);
                   payment = transfers.reduce(function (a, t) {
                     return a + t.value;
                   }, 0);
-                  maxInputIndex = inputs.reduce(function (a, x) {
-                    return Math.max(a, x.keyIndex);
-                  }, 0);
+
 
                   remainder = {
-                    address: noChecksum(remainderAddress),
+                    address: noChecksum(remainder.address),
                     value: balance - payment,
-                    // TODO: this is just a dirty hack, before we get keyIndex
-                    keyIndex: maxInputIndex + 1
+                    keyIndex: remainder.keyIndex
                   };
                 }
 
-                _context4.next = 11;
+                _context4.next = 7;
                 return this._getSignedLedgerTransactions(transfers, inputs, remainder);
 
-              case 11:
+              case 7:
                 return _context4.abrupt('return', _context4.sent);
 
-              case 12:
+              case 8:
 
                 // no inputs use the regular iota lib with a dummy seed
                 options = {
                   inputs: inputs,
                   address: remainder
                 };
-                _context4.next = 15;
+                _context4.next = 11;
                 return function () {
                   return new Promise(function (resolve, reject) {
                     _this2.iota.api.prepareTransfers(DUMMY_SEED, transfers, options, function (err, result) {
@@ -238,10 +217,10 @@ var LedgerGuard = function (_BaseGuard) {
                   });
                 }();
 
-              case 15:
+              case 11:
                 return _context4.abrupt('return', _context4.sent);
 
-              case 16:
+              case 12:
               case 'end':
                 return _context4.stop();
             }
@@ -294,7 +273,7 @@ var LedgerGuard = function (_BaseGuard) {
                 inputs.forEach(function (i) {
                   return bundle.addEntry(i.security, i.address, -i.balance, EMPTY_TAG, timestamp, i.keyIndex);
                 });
-                if (remainder.value) {
+                if (remainder) {
                   bundle.addEntry(1, remainder.address, remainder.value, EMPTY_TAG, timestamp, remainder.keyIndex);
                 }
                 bundle.addTrytes([]);

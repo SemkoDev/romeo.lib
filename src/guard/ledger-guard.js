@@ -62,15 +62,9 @@ class LedgerGuard extends BaseGuard {
     return await this._getGenericAddresses(index, total);
   }
 
-  // TODO: remainder should be an object with address and keyIndex
-  async _getSignedTransactions(transfers, inputs, remainderAddress) {
-    // TODO: why is the remainderAddress an array?
-    if (Array.isArray(remainderAddress)) {
-      remainderAddress = remainderAddress[0];
-    }
-    inputs = inputs || [];
-
+  async _getSignedTransactions(transfers, inputs, remainder) {
     // filter unnecessary inputs
+    inputs = inputs || [];
     inputs = inputs.filter(input => input.balance > 0);
 
     if (this.opts.debug) {
@@ -83,24 +77,14 @@ class LedgerGuard extends BaseGuard {
 
     // the ledger is only needed, if there are proper inputs
     if (Array.isArray(inputs) && inputs.length) {
-      if (inputs.length > 2 || transfers.length > 1) {
-        throw new Error('Only one output and two inputs supported');
-      }
-
-      var remainder = {};
-      if (remainderAddress) {
+      if (remainder) {
         const balance = inputs.reduce((a, i) => a + i.balance, 0);
         const payment = transfers.reduce((a, t) => a + t.value, 0);
 
-        const maxInputIndex = inputs.reduce(
-          (a, x) => Math.max(a, x.keyIndex),
-          0
-        );
         remainder = {
-          address: noChecksum(remainderAddress),
+          address: noChecksum(remainder.address),
           value: balance - payment,
-          // TODO: this is just a dirty hack, before we get keyIndex
-          keyIndex: maxInputIndex + 1
+          keyIndex: remainder.keyIndex
         };
       }
 
@@ -157,7 +141,7 @@ class LedgerGuard extends BaseGuard {
         i.keyIndex
       )
     );
-    if (remainder.value) {
+    if (remainder) {
       bundle.addEntry(
         1,
         remainder.address,
