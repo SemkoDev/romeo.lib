@@ -58,6 +58,16 @@ var LedgerGuard = function (_BaseGuard) {
   }
 
   _createClass(LedgerGuard, [{
+    key: 'getMaxOutputs',
+    value: function getMaxOutputs() {
+      return 1;
+    }
+  }, {
+    key: 'getMaxInputs',
+    value: function getMaxInputs() {
+      return 2;
+    }
+  }, {
     key: 'getSymmetricKey',
     value: function getSymmetricKey() {
       return this.key;

@@ -43,6 +43,14 @@ class LedgerGuard extends BaseGuard {
     return new LedgerGuard(hwapp, keyAddress.substr(0, 32), opts);
   }
 
+  getMaxOutputs () {
+    return 1;
+  }
+
+  getMaxInputs () {
+    return 2;
+  }
+
   getSymmetricKey() {
     return this.key;
   }
