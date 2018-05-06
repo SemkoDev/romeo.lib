@@ -20,21 +20,14 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Bundle = require('iota.lib.js/lib/crypto/bundle/bundle');
-
-var _require = require('iota.lib.js/lib/utils/utils'),
-    noChecksum = _require.noChecksum,
-    transactionTrytes = _require.transactionTrytes;
-
-var _require2 = require('./base'),
-    BaseGuard = _require2.BaseGuard;
+var _require = require('./base'),
+    BaseGuard = _require.BaseGuard;
 
 // use testnet path
 
 
 var BIP44_PATH = [0x8000002c, 0x80000001, 0x80000000, 0x00000000, 0x00000000];
 var DUMMY_SEED = '9'.repeat(81);
-var EMPTY_TAG = '9'.repeat(27);
 
 var DEFAULT_OPTIONS = {
   concurrent: 1,
@@ -166,7 +159,7 @@ var LedgerGuard = function (_BaseGuard) {
       var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(transfers, inputs, remainder) {
         var _this2 = this;
 
-        var balance, payment, options;
+        var options;
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
@@ -184,40 +177,24 @@ var LedgerGuard = function (_BaseGuard) {
                 // the ledger is only needed, if there are proper inputs
 
                 if (!(Array.isArray(inputs) && inputs.length)) {
-                  _context4.next = 8;
+                  _context4.next = 7;
                   break;
                 }
 
-                if (remainder) {
-                  balance = inputs.reduce(function (a, i) {
-                    return a + i.balance;
-                  }, 0);
-                  payment = transfers.reduce(function (a, t) {
-                    return a + t.value;
-                  }, 0);
+                _context4.next = 6;
+                return this.hwapp.getSignedTransactions(transfers, inputs, remainder);
 
-
-                  remainder = {
-                    address: noChecksum(remainder.address),
-                    value: balance - payment,
-                    keyIndex: remainder.keyIndex
-                  };
-                }
-
-                _context4.next = 7;
-                return this._getSignedLedgerTransactions(transfers, inputs, remainder);
-
-              case 7:
+              case 6:
                 return _context4.abrupt('return', _context4.sent);
 
-              case 8:
+              case 7:
 
                 // no inputs use the regular iota lib with a dummy seed
                 options = {
                   inputs: inputs,
                   address: remainder
                 };
-                _context4.next = 11;
+                _context4.next = 10;
                 return function () {
                   return new Promise(function (resolve, reject) {
                     _this2.iota.api.prepareTransfers(DUMMY_SEED, transfers, options, function (err, result) {
@@ -227,10 +204,10 @@ var LedgerGuard = function (_BaseGuard) {
                   });
                 }();
 
-              case 11:
+              case 10:
                 return _context4.abrupt('return', _context4.sent);
 
-              case 12:
+              case 11:
               case 'end':
                 return _context4.stop();
             }
@@ -245,116 +222,29 @@ var LedgerGuard = function (_BaseGuard) {
       return _getSignedTransactions;
     }()
   }, {
-    key: '_getSignedLedgerTransactions',
+    key: '_getGenericAddresses',
     value: function () {
-      var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(transfers, inputs, remainder) {
-        var _this3 = this;
-
-        var timestamp, bundle, inputMapping, bundleTrytes;
+      var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(index, total) {
+        var addresses, i, keyIndex, address;
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
-              case 0:
-                // remove checksums
-                transfers.forEach(function (t) {
-                  return t.address = noChecksum(t.address);
-                });
-                inputs.forEach(function (i) {
-                  return i.address = noChecksum(i.address);
-                });
-
-                // pad transfer tags
-                transfers.forEach(function (t) {
-                  return t.tag = t.tag ? t.tag.padEnd(27, '9') : EMPTY_TAG;
-                });
-                // set correct security level
-                inputs.forEach(function (i) {
-                  return i.security = _this3.opts.security;
-                });
-
-                // use the current time
-                timestamp = Math.floor(Date.now() / 1000);
-                bundle = new Bundle();
-
-
-                transfers.forEach(function (t) {
-                  return bundle.addEntry(1, t.address, t.value, t.tag, timestamp, -1);
-                });
-                inputs.forEach(function (i) {
-                  return bundle.addEntry(i.security, i.address, -i.balance, EMPTY_TAG, timestamp, i.keyIndex);
-                });
-                if (remainder) {
-                  bundle.addEntry(1, remainder.address, remainder.value, EMPTY_TAG, timestamp, remainder.keyIndex);
-                }
-                bundle.addTrytes([]);
-                bundle.finalize();
-
-                // map internal addresses to their index
-                inputMapping = {};
-
-                inputs.forEach(function (i) {
-                  return inputMapping[i.address] = i.keyIndex;
-                });
-                inputMapping[remainder.address] = remainder.keyIndex;
-
-                // sign the bundle on the ledger
-                _context5.next = 16;
-                return this.hwapp.signBundle({
-                  inputMapping: inputMapping,
-                  bundle: bundle,
-                  security: this.opts.security
-                });
-
-              case 16:
-                bundle = _context5.sent;
-
-
-                // compute and return the corresponding trytes
-                bundleTrytes = [];
-
-                bundle.bundle.forEach(function (tx) {
-                  return bundleTrytes.push(transactionTrytes(tx));
-                });
-                return _context5.abrupt('return', bundleTrytes.reverse());
-
-              case 20:
-              case 'end':
-                return _context5.stop();
-            }
-          }
-        }, _callee5, this);
-      }));
-
-      function _getSignedLedgerTransactions(_x9, _x10, _x11) {
-        return _ref5.apply(this, arguments);
-      }
-
-      return _getSignedLedgerTransactions;
-    }()
-  }, {
-    key: '_getGenericAddresses',
-    value: function () {
-      var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(index, total) {
-        var addresses, i, keyIndex, address;
-        return regeneratorRuntime.wrap(function _callee6$(_context6) {
-          while (1) {
-            switch (_context6.prev = _context6.next) {
               case 0:
                 addresses = [];
                 i = 0;
 
               case 2:
                 if (!(i < total)) {
-                  _context6.next = 12;
+                  _context5.next = 12;
                   break;
                 }
 
                 keyIndex = index + i;
-                _context6.next = 6;
+                _context5.next = 6;
                 return this.hwapp.getAddress(keyIndex);
 
               case 6:
-                address = _context6.sent;
+                address = _context5.sent;
 
                 if (this.opts.debug) {
                   console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
@@ -363,22 +253,22 @@ var LedgerGuard = function (_BaseGuard) {
 
               case 9:
                 i++;
-                _context6.next = 2;
+                _context5.next = 2;
                 break;
 
               case 12:
-                return _context6.abrupt('return', addresses);
+                return _context5.abrupt('return', addresses);
 
               case 13:
               case 'end':
-                return _context6.stop();
+                return _context5.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee5, this);
       }));
 
-      function _getGenericAddresses(_x12, _x13) {
-        return _ref6.apply(this, arguments);
+      function _getGenericAddresses(_x9, _x10) {
+        return _ref5.apply(this, arguments);
       }
 
       return _getGenericAddresses;
@@ -386,36 +276,36 @@ var LedgerGuard = function (_BaseGuard) {
   }, {
     key: '_setPageSeed',
     value: function () {
-      var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(pageIndex) {
-        return regeneratorRuntime.wrap(function _callee7$(_context7) {
+      var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(pageIndex) {
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
                 if (!(this.activePageIndex != pageIndex)) {
-                  _context7.next = 11;
+                  _context6.next = 11;
                   break;
                 }
 
                 if (!(pageIndex < 0)) {
-                  _context7.next = 7;
+                  _context6.next = 7;
                   break;
                 }
 
                 if (this.opts.debug) {
                   console.log('setInternalSeed; index=%i', 1);
                 }
-                _context7.next = 5;
+                _context6.next = 5;
                 return LedgerGuard._setInternalSeed(this.hwapp, 1);
 
               case 5:
-                _context7.next = 10;
+                _context6.next = 10;
                 break;
 
               case 7:
                 if (this.opts.debug) {
                   console.log('setExternalSeed; index=%i', pageIndex);
                 }
-                _context7.next = 10;
+                _context6.next = 10;
                 return this.hwapp.setSeedInput(LedgerGuard._getBipPath(0, pageIndex), this.opts.security);
 
               case 10:
@@ -424,14 +314,14 @@ var LedgerGuard = function (_BaseGuard) {
 
               case 11:
               case 'end':
-                return _context7.stop();
+                return _context6.stop();
             }
           }
-        }, _callee7, this);
+        }, _callee6, this);
       }));
 
-      function _setPageSeed(_x14) {
-        return _ref7.apply(this, arguments);
+      function _setPageSeed(_x11) {
+        return _ref6.apply(this, arguments);
       }
 
       return _setPageSeed;
@@ -439,18 +329,18 @@ var LedgerGuard = function (_BaseGuard) {
   }], [{
     key: 'build',
     value: function () {
-      var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(options) {
+      var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(options) {
         var opts, transport, hwapp, keyAddress;
-        return regeneratorRuntime.wrap(function _callee8$(_context8) {
+        return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
-            switch (_context8.prev = _context8.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
                 opts = Object.assign({}, DEFAULT_OPTIONS, options);
-                _context8.next = 3;
+                _context7.next = 3;
                 return _hwTransportU2f2.default.create();
 
               case 3:
-                transport = _context8.sent;
+                transport = _context7.sent;
 
                 if (opts.debug) {
                   transport.setDebugMode(true);
@@ -458,27 +348,27 @@ var LedgerGuard = function (_BaseGuard) {
                 // wait 1 min for result
                 transport.setExchangeTimeout(60000);
                 hwapp = new _hwAppIota2.default(transport);
-                _context8.next = 9;
+                _context7.next = 9;
                 return LedgerGuard._setInternalSeed(hwapp, 2);
 
               case 9:
-                _context8.next = 11;
+                _context7.next = 11;
                 return hwapp.getAddress(0);
 
               case 11:
-                keyAddress = _context8.sent;
-                return _context8.abrupt('return', new LedgerGuard(hwapp, keyAddress.substr(0, 32), opts));
+                keyAddress = _context7.sent;
+                return _context7.abrupt('return', new LedgerGuard(hwapp, keyAddress.substr(0, 32), opts));
 
               case 13:
               case 'end':
-                return _context8.stop();
+                return _context7.stop();
             }
           }
-        }, _callee8, this);
+        }, _callee7, this);
       }));
 
-      function build(_x15) {
-        return _ref8.apply(this, arguments);
+      function build(_x12) {
+        return _ref7.apply(this, arguments);
       }
 
       return build;
@@ -486,24 +376,24 @@ var LedgerGuard = function (_BaseGuard) {
   }, {
     key: '_setInternalSeed',
     value: function () {
-      var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(hwapp, index) {
-        return regeneratorRuntime.wrap(function _callee9$(_context9) {
+      var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(hwapp, index) {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                _context9.next = 2;
+                _context8.next = 2;
                 return hwapp.setSeedInput(LedgerGuard._getBipPath(1, index), 1);
 
               case 2:
               case 'end':
-                return _context9.stop();
+                return _context8.stop();
             }
           }
-        }, _callee9, this);
+        }, _callee8, this);
       }));
 
-      function _setInternalSeed(_x16, _x17) {
-        return _ref9.apply(this, arguments);
+      function _setInternalSeed(_x13, _x14) {
+        return _ref8.apply(this, arguments);
       }
 
       return _setInternalSeed;
