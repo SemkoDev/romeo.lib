@@ -351,7 +351,7 @@ var LedgerGuard = function (_BaseGuard) {
 
                 keyIndex = index + i;
                 _context6.next = 6;
-                return this.hwapp.getPubKey(keyIndex);
+                return this.hwapp.getAddress(keyIndex);
 
               case 6:
                 address = _context6.sent;
@@ -463,7 +463,7 @@ var LedgerGuard = function (_BaseGuard) {
 
               case 9:
                 _context8.next = 11;
-                return hwapp.getPubKey(0);
+                return hwapp.getAddress(0);
 
               case 11:
                 keyAddress = _context8.sent;

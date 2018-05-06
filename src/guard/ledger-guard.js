@@ -38,16 +38,16 @@ class LedgerGuard extends BaseGuard {
     const hwapp = new AppIota(transport);
 
     await LedgerGuard._setInternalSeed(hwapp, 2);
-    const keyAddress = await hwapp.getPubKey(0);
+    const keyAddress = await hwapp.getAddress(0);
 
     return new LedgerGuard(hwapp, keyAddress.substr(0, 32), opts);
   }
 
-  getMaxOutputs () {
+  getMaxOutputs() {
     return 1;
   }
 
-  getMaxInputs () {
+  getMaxInputs() {
     return 2;
   }
 
@@ -184,7 +184,7 @@ class LedgerGuard extends BaseGuard {
     var addresses = [];
     for (var i = 0; i < total; i++) {
       const keyIndex = index + i;
-      const address = await this.hwapp.getPubKey(keyIndex);
+      const address = await this.hwapp.getAddress(keyIndex);
       if (this.opts.debug) {
         console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
       }
