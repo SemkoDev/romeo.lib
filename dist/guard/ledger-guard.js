@@ -23,10 +23,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var _require = require('./base'),
     BaseGuard = _require.BaseGuard;
 
-// use testnet path
+// use testnet path for now
 
 
-var BIP44_PATH = [0x8000002c, 0x80000001, 0x80000000, 0x00000000, 0x00000000];
+var BIP44_PATH = "44'/1'/0'";
 var DUMMY_SEED = '9'.repeat(81);
 
 var DEFAULT_OPTIONS = {
@@ -182,7 +182,7 @@ var LedgerGuard = function (_BaseGuard) {
                 }
 
                 _context4.next = 6;
-                return this.hwapp.getSignedTransactions(transfers, inputs, remainder);
+                return this.hwapp.signTransaction(transfers, inputs, remainder);
 
               case 6:
                 return _context4.abrupt('return', _context4.sent);
@@ -306,7 +306,7 @@ var LedgerGuard = function (_BaseGuard) {
                   console.log('setExternalSeed; index=%i', pageIndex);
                 }
                 _context6.next = 10;
-                return this.hwapp.setSeedInput(LedgerGuard._getBipPath(0, pageIndex), this.opts.security);
+                return this.hwapp.setActiveSeed(LedgerGuard._getBipPath(0, pageIndex), this.opts.security);
 
               case 10:
 
@@ -382,7 +382,7 @@ var LedgerGuard = function (_BaseGuard) {
             switch (_context8.prev = _context8.next) {
               case 0:
                 _context8.next = 2;
-                return hwapp.setSeedInput(LedgerGuard._getBipPath(1, index), 1);
+                return hwapp.setActiveSeed(LedgerGuard._getBipPath(1, index), 1);
 
               case 2:
               case 'end':
@@ -401,10 +401,7 @@ var LedgerGuard = function (_BaseGuard) {
   }, {
     key: '_getBipPath',
     value: function _getBipPath(change, index) {
-      var path = BIP44_PATH.slice();
-      path[3] = change;
-      path[4] = index;
-      return path;
+      return BIP44_PATH + '/' + change + '/' + index;
     }
   }]);
 

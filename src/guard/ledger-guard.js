@@ -2,8 +2,8 @@ import Transport from '@ledgerhq/hw-transport-u2f';
 import AppIota from 'hw-app-iota';
 const { BaseGuard } = require('./base');
 
-// use testnet path
-const BIP44_PATH = [0x8000002c, 0x80000001, 0x80000000, 0x00000000, 0x00000000];
+// use testnet path for now
+const BIP44_PATH = "44'/1'/0'";
 const DUMMY_SEED = '9'.repeat(81);
 
 const DEFAULT_OPTIONS = {
@@ -79,11 +79,7 @@ class LedgerGuard extends BaseGuard {
 
     // the ledger is only needed, if there are proper inputs
     if (Array.isArray(inputs) && inputs.length) {
-      return await this.hwapp.getSignedTransactions(
-        transfers,
-        inputs,
-        remainder
-      );
+      return await this.hwapp.signTransaction(transfers, inputs, remainder);
     }
 
     // no inputs use the regular iota lib with a dummy seed
@@ -130,7 +126,7 @@ class LedgerGuard extends BaseGuard {
         if (this.opts.debug) {
           console.log('setExternalSeed; index=%i', pageIndex);
         }
-        await this.hwapp.setSeedInput(
+        await this.hwapp.setActiveSeed(
           LedgerGuard._getBipPath(0, pageIndex),
           this.opts.security
         );
@@ -141,14 +137,11 @@ class LedgerGuard extends BaseGuard {
   }
 
   static async _setInternalSeed(hwapp, index) {
-    await hwapp.setSeedInput(LedgerGuard._getBipPath(1, index), 1);
+    await hwapp.setActiveSeed(LedgerGuard._getBipPath(1, index), 1);
   }
 
   static _getBipPath(change, index) {
-    var path = BIP44_PATH.slice();
-    path[3] = change;
-    path[4] = index;
-    return path;
+    return BIP44_PATH + '/' + change + '/' + index;
   }
 }
 
