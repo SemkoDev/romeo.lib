@@ -348,8 +348,7 @@ var BasePage = function (_Base) {
           index = _opts4.index,
           isCurrent = _opts4.isCurrent;
 
-
-      var sendPromise = function sendPromise() {
+      var promiseFactory = function promiseFactory() {
         return new Promise(function (resolve, reject) {
           iota.api.ext.sendTransfer(index, IOTA_DEPTH, IOTA_MWM, transfers, { inputs: inputs }, function (err, result) {
             if (err) {
@@ -361,7 +360,7 @@ var BasePage = function (_Base) {
       };
 
       return new Promise(function (resolve, reject) {
-        var _queue$add3 = queue.add(sendPromise, priority || (isCurrent ? 20 : 10), {
+        var _queue$add3 = queue.add(promiseFactory, priority || (isCurrent ? 20 : 10), {
           page: index,
           type: 'SEND_TRANSFER',
           description: message || 'Sending transfers'

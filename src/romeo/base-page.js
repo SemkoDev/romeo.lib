@@ -186,27 +186,25 @@ class BasePage extends Base {
 
   sendTransfers(transfers, inputs, message, messageFail, priority) {
     const { iota, queue, index, isCurrent } = this.opts;
-
-    const sendPromise = () =>
-      new Promise((resolve, reject) => {
-        iota.api.ext.sendTransfer(
-          index,
-          IOTA_DEPTH,
-          IOTA_MWM,
-          transfers,
-          { inputs },
-          (err, result) => {
-            if (err) {
-              return reject(err);
-            }
-            resolve(result);
+    const promiseFactory = () => new Promise((resolve, reject) => {
+      iota.api.ext.sendTransfer(
+        index,
+        IOTA_DEPTH,
+        IOTA_MWM,
+        transfers,
+        { inputs },
+        (err, result) => {
+          if (err) {
+            return reject(err);
           }
-        );
-      });
+          resolve(result);
+        }
+      );
+    });
 
     return new Promise((resolve, reject) => {
       const { job } = queue.add(
-        sendPromise,
+        promiseFactory,
         priority || (isCurrent ? 20 : 10),
         {
           page: index,

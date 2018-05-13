@@ -135,9 +135,15 @@ class BaseGuard {
    * @returns {Promise<String[]>}
    */
   async getAddresses (pageIndex, index, total, priority = 1) {
-    const promiseFactory = () => new Promise (async (resolve) => {
+    const promiseFactory = () => new Promise (async (resolve, reject) => {
       await this._setActivePage(pageIndex);
-      resolve(await this._getAddresses(index, total));
+      try {
+        var res = await this._getAddresses(index, total);
+        resolve(res);
+      }
+      catch (e) {
+        reject(e);
+      }
     });
 
     return new Promise((resolve, reject) => {
@@ -161,9 +167,15 @@ class BaseGuard {
    * @returns {Promise<string[]>}
    */
   async getSignedTransactions (pageIndex, transfers, inputs, remainder, priority = 1) {
-    const promiseFactory = () => new Promise (async (resolve) => {
+    const promiseFactory = () => new Promise (async (resolve, reject) => {
       this._setActivePage(pageIndex);
-      resolve(await this._getSignedTransactions(transfers, inputs, remainder));
+      try {
+        var signedTransactions = await this._getSignedTransactions(transfers, inputs, remainder);
+        resolve(signedTransactions);
+      }
+      catch (e) {
+        reject(e);
+      }
     });
 
     return new Promise((resolve, reject) => {
@@ -173,7 +185,9 @@ class BaseGuard {
         { page: pageIndex, type: 'GET_SIGNED_TRANSACTIONS' }
       );
       job.on('finish', resolve);
-      job.on('failed', reject);
+      job.on('failed', (e) => {
+        console.error('sign tx failed!', reject);
+      });
     });
   }
 

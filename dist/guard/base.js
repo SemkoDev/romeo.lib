@@ -230,7 +230,8 @@ var BaseGuard = function () {
               case 0:
                 promiseFactory = function promiseFactory() {
                   return new Promise(function () {
-                    var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(resolve) {
+                    var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(resolve, reject) {
+                      var res;
                       return regeneratorRuntime.wrap(function _callee3$(_context3) {
                         while (1) {
                           switch (_context3.prev = _context3.next) {
@@ -239,23 +240,32 @@ var BaseGuard = function () {
                               return _this3._setActivePage(pageIndex);
 
                             case 2:
-                              _context3.t0 = resolve;
+                              _context3.prev = 2;
                               _context3.next = 5;
                               return _this3._getAddresses(index, total);
 
                             case 5:
-                              _context3.t1 = _context3.sent;
-                              (0, _context3.t0)(_context3.t1);
+                              res = _context3.sent;
 
-                            case 7:
+                              resolve(res);
+                              _context3.next = 12;
+                              break;
+
+                            case 9:
+                              _context3.prev = 9;
+                              _context3.t0 = _context3['catch'](2);
+
+                              reject(_context3.t0);
+
+                            case 12:
                             case 'end':
                               return _context3.stop();
                           }
                         }
-                      }, _callee3, _this3);
+                      }, _callee3, _this3, [[2, 9]]);
                     }));
 
-                    return function (_x9) {
+                    return function (_x9, _x10) {
                       return _ref4.apply(this, arguments);
                     };
                   }());
@@ -306,29 +316,39 @@ var BaseGuard = function () {
               case 0:
                 promiseFactory = function promiseFactory() {
                   return new Promise(function () {
-                    var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(resolve) {
+                    var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(resolve, reject) {
+                      var signedTransactions;
                       return regeneratorRuntime.wrap(function _callee5$(_context5) {
                         while (1) {
                           switch (_context5.prev = _context5.next) {
                             case 0:
                               _this4._setActivePage(pageIndex);
-                              _context5.t0 = resolve;
+                              _context5.prev = 1;
                               _context5.next = 4;
                               return _this4._getSignedTransactions(transfers, inputs, remainder);
 
                             case 4:
-                              _context5.t1 = _context5.sent;
-                              (0, _context5.t0)(_context5.t1);
+                              signedTransactions = _context5.sent;
 
-                            case 6:
+                              resolve(signedTransactions);
+                              _context5.next = 11;
+                              break;
+
+                            case 8:
+                              _context5.prev = 8;
+                              _context5.t0 = _context5['catch'](1);
+
+                              reject(_context5.t0);
+
+                            case 11:
                             case 'end':
                               return _context5.stop();
                           }
                         }
-                      }, _callee5, _this4);
+                      }, _callee5, _this4, [[1, 8]]);
                     }));
 
-                    return function (_x15) {
+                    return function (_x16, _x17) {
                       return _ref6.apply(this, arguments);
                     };
                   }());
@@ -337,7 +357,9 @@ var BaseGuard = function () {
                 return _context6.abrupt('return', new Promise(function (resolve, reject) {
                   var job = _this4.queue.addJob(promiseFactory, priority, { page: pageIndex, type: 'GET_SIGNED_TRANSACTIONS' });
                   job.on('finish', resolve);
-                  job.on('failed', reject);
+                  job.on('failed', function (e) {
+                    console.error('sign tx failed!', reject);
+                  });
                 }));
 
               case 2:
@@ -348,7 +370,7 @@ var BaseGuard = function () {
         }, _callee6, this);
       }));
 
-      function getSignedTransactions(_x11, _x12, _x13, _x14) {
+      function getSignedTransactions(_x12, _x13, _x14, _x15) {
         return _ref5.apply(this, arguments);
       }
 
@@ -381,7 +403,7 @@ var BaseGuard = function () {
         }, _callee7, this);
       }));
 
-      function _setActivePage(_x16) {
+      function _setActivePage(_x18) {
         return _ref7.apply(this, arguments);
       }
 
@@ -415,7 +437,7 @@ var BaseGuard = function () {
         }, _callee8, this);
       }));
 
-      function _getPages(_x17, _x18) {
+      function _getPages(_x19, _x20) {
         return _ref8.apply(this, arguments);
       }
 
@@ -449,7 +471,7 @@ var BaseGuard = function () {
         }, _callee9, this);
       }));
 
-      function _getAddresses(_x19, _x20) {
+      function _getAddresses(_x21, _x22) {
         return _ref9.apply(this, arguments);
       }
 
@@ -484,7 +506,7 @@ var BaseGuard = function () {
         }, _callee10, this);
       }));
 
-      function _getSignedTransactions(_x21, _x22, _x23) {
+      function _getSignedTransactions(_x23, _x24, _x25) {
         return _ref10.apply(this, arguments);
       }
 

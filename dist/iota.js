@@ -283,7 +283,7 @@ function _getNewAddress(api, guard, seedOrPageIndex, index, total, callback) {
       return guard.getAddresses(seedOrPageIndex, i, t);
     };
     _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-      var allAddresses;
+      var allAddresses, res;
       return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -296,19 +296,28 @@ function _getNewAddress(api, guard, seedOrPageIndex, index, total, callback) {
               // and return the list of all addresses
 
               if (!total) {
-                _context.next = 9;
+                _context.next = 14;
                 break;
               }
 
-              _context.t0 = callback;
+              _context.prev = 2;
               _context.next = 5;
               return getter(index, total);
 
             case 5:
-              _context.t1 = _context.sent;
-              return _context.abrupt('return', (0, _context.t0)(null, _context.t1));
+              res = _context.sent;
+              return _context.abrupt('return', callback(null, res));
 
             case 9:
+              _context.prev = 9;
+              _context.t0 = _context['catch'](2);
+              return _context.abrupt('return', callback(_context.t0, null));
+
+            case 12:
+              _context.next = 15;
+              break;
+
+            case 14:
               async.doWhilst(function (callback) {
                 // Iteratee function
                 getter(index, 1).then(function (addresses) {
@@ -350,12 +359,12 @@ function _getNewAddress(api, guard, seedOrPageIndex, index, total, callback) {
                 }
               });
 
-            case 10:
+            case 15:
             case 'end':
               return _context.stop();
           }
         }
-      }, _callee, _this);
+      }, _callee, _this, [[2, 9]]);
     }))();
   }
 }

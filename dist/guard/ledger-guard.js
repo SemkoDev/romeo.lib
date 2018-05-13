@@ -41,13 +41,13 @@ var LedgerGuard = function (_BaseGuard) {
   function LedgerGuard(hwapp, key, options) {
     _classCallCheck(this, LedgerGuard);
 
-    var _this = _possibleConstructorReturn(this, (LedgerGuard.__proto__ || Object.getPrototypeOf(LedgerGuard)).call(this, options));
+    var _this2 = _possibleConstructorReturn(this, (LedgerGuard.__proto__ || Object.getPrototypeOf(LedgerGuard)).call(this, options));
 
-    _this.opts = options;
+    _this2.opts = options;
 
-    _this.hwapp = hwapp;
-    _this.key = key;
-    return _this;
+    _this2.hwapp = hwapp;
+    _this2.key = key;
+    return _this2;
   }
 
   _createClass(LedgerGuard, [{
@@ -157,7 +157,7 @@ var LedgerGuard = function (_BaseGuard) {
     key: '_getSignedTransactions',
     value: function () {
       var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(transfers, inputs, remainder) {
-        var _this2 = this;
+        var _this3 = this;
 
         var options;
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -197,7 +197,7 @@ var LedgerGuard = function (_BaseGuard) {
                 _context4.next = 10;
                 return function () {
                   return new Promise(function (resolve, reject) {
-                    _this2.iota.api.prepareTransfers(DUMMY_SEED, transfers, options, function (err, result) {
+                    _this3.iota.api.prepareTransfers(DUMMY_SEED, transfers, options, function (err, result) {
                       if (err) return reject(err);
                       resolve(result);
                     });
@@ -224,47 +224,78 @@ var LedgerGuard = function (_BaseGuard) {
   }, {
     key: '_getGenericAddresses',
     value: function () {
-      var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(index, total) {
-        var addresses, i, keyIndex, address;
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+      var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(index, total) {
+        var _this;
+
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
-                addresses = [];
-                i = 0;
+                _this = this;
+                return _context6.abrupt('return', new Promise(function () {
+                  var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(resolve, reject) {
+                    var addresses, i, keyIndex, address;
+                    return regeneratorRuntime.wrap(function _callee5$(_context5) {
+                      while (1) {
+                        switch (_context5.prev = _context5.next) {
+                          case 0:
+                            _context5.prev = 0;
+                            addresses = [];
+                            i = 0;
+
+                          case 3:
+                            if (!(i < total)) {
+                              _context5.next = 13;
+                              break;
+                            }
+
+                            keyIndex = index + i;
+                            _context5.next = 7;
+                            return _this.hwapp.getAddress(keyIndex);
+
+                          case 7:
+                            address = _context5.sent;
+
+                            if (_this.opts.debug) {
+                              console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
+                            }
+                            addresses.push(address);
+
+                          case 10:
+                            i++;
+                            _context5.next = 3;
+                            break;
+
+                          case 13:
+                            resolve(addresses);
+                            _context5.next = 19;
+                            break;
+
+                          case 16:
+                            _context5.prev = 16;
+                            _context5.t0 = _context5['catch'](0);
+
+                            reject(_context5.t0);
+
+                          case 19:
+                          case 'end':
+                            return _context5.stop();
+                        }
+                      }
+                    }, _callee5, this, [[0, 16]]);
+                  }));
+
+                  return function (_x11, _x12) {
+                    return _ref6.apply(this, arguments);
+                  };
+                }()));
 
               case 2:
-                if (!(i < total)) {
-                  _context5.next = 12;
-                  break;
-                }
-
-                keyIndex = index + i;
-                _context5.next = 6;
-                return this.hwapp.getAddress(keyIndex);
-
-              case 6:
-                address = _context5.sent;
-
-                if (this.opts.debug) {
-                  console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
-                }
-                addresses.push(address);
-
-              case 9:
-                i++;
-                _context5.next = 2;
-                break;
-
-              case 12:
-                return _context5.abrupt('return', addresses);
-
-              case 13:
               case 'end':
-                return _context5.stop();
+                return _context6.stop();
             }
           }
-        }, _callee5, this);
+        }, _callee6, this);
       }));
 
       function _getGenericAddresses(_x9, _x10) {
@@ -276,36 +307,36 @@ var LedgerGuard = function (_BaseGuard) {
   }, {
     key: '_setPageSeed',
     value: function () {
-      var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(pageIndex) {
-        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+      var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(pageIndex) {
+        return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
                 if (!(this.activePageIndex != pageIndex)) {
-                  _context6.next = 11;
+                  _context7.next = 11;
                   break;
                 }
 
                 if (!(pageIndex < 0)) {
-                  _context6.next = 7;
+                  _context7.next = 7;
                   break;
                 }
 
                 if (this.opts.debug) {
                   console.log('setInternalSeed; index=%i', 1);
                 }
-                _context6.next = 5;
+                _context7.next = 5;
                 return LedgerGuard._setInternalSeed(this.hwapp, 1);
 
               case 5:
-                _context6.next = 10;
+                _context7.next = 10;
                 break;
 
               case 7:
                 if (this.opts.debug) {
                   console.log('setExternalSeed; index=%i', pageIndex);
                 }
-                _context6.next = 10;
+                _context7.next = 10;
                 return this.hwapp.setActiveSeed(LedgerGuard._getBipPath(0, pageIndex), this.opts.security);
 
               case 10:
@@ -314,14 +345,14 @@ var LedgerGuard = function (_BaseGuard) {
 
               case 11:
               case 'end':
-                return _context6.stop();
+                return _context7.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee7, this);
       }));
 
-      function _setPageSeed(_x11) {
-        return _ref6.apply(this, arguments);
+      function _setPageSeed(_x13) {
+        return _ref7.apply(this, arguments);
       }
 
       return _setPageSeed;
@@ -329,62 +360,37 @@ var LedgerGuard = function (_BaseGuard) {
   }], [{
     key: 'build',
     value: function () {
-      var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(options) {
+      var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(options) {
         var opts, transport, hwapp, keyAddress;
-        return regeneratorRuntime.wrap(function _callee7$(_context7) {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
                 opts = Object.assign({}, DEFAULT_OPTIONS, options);
-                _context7.next = 3;
+                _context8.next = 3;
                 return _hwTransportU2f2.default.create();
 
               case 3:
-                transport = _context7.sent;
+                transport = _context8.sent;
 
                 if (opts.debug) {
                   transport.setDebugMode(true);
                 }
                 // wait 1 min for result
-                transport.setExchangeTimeout(60000);
+                transport.setExchangeTimeout(5000);
                 hwapp = new _hwAppIota2.default(transport);
-                _context7.next = 9;
+                _context8.next = 9;
                 return LedgerGuard._setInternalSeed(hwapp, 2);
 
               case 9:
-                _context7.next = 11;
+                _context8.next = 11;
                 return hwapp.getAddress(0);
 
               case 11:
-                keyAddress = _context7.sent;
-                return _context7.abrupt('return', new LedgerGuard(hwapp, keyAddress.substr(0, 32), opts));
+                keyAddress = _context8.sent;
+                return _context8.abrupt('return', new LedgerGuard(hwapp, keyAddress.substr(0, 32), opts));
 
               case 13:
-              case 'end':
-                return _context7.stop();
-            }
-          }
-        }, _callee7, this);
-      }));
-
-      function build(_x12) {
-        return _ref7.apply(this, arguments);
-      }
-
-      return build;
-    }()
-  }, {
-    key: '_setInternalSeed',
-    value: function () {
-      var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(hwapp, index) {
-        return regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                _context8.next = 2;
-                return hwapp.setActiveSeed(LedgerGuard._getBipPath(1, index), 1);
-
-              case 2:
               case 'end':
                 return _context8.stop();
             }
@@ -392,8 +398,33 @@ var LedgerGuard = function (_BaseGuard) {
         }, _callee8, this);
       }));
 
-      function _setInternalSeed(_x13, _x14) {
+      function build(_x14) {
         return _ref8.apply(this, arguments);
+      }
+
+      return build;
+    }()
+  }, {
+    key: '_setInternalSeed',
+    value: function () {
+      var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(hwapp, index) {
+        return regeneratorRuntime.wrap(function _callee9$(_context9) {
+          while (1) {
+            switch (_context9.prev = _context9.next) {
+              case 0:
+                _context9.next = 2;
+                return hwapp.setActiveSeed(LedgerGuard._getBipPath(1, index), 1);
+
+              case 2:
+              case 'end':
+                return _context9.stop();
+            }
+          }
+        }, _callee9, this);
+      }));
+
+      function _setInternalSeed(_x15, _x16) {
+        return _ref9.apply(this, arguments);
       }
 
       return _setInternalSeed;

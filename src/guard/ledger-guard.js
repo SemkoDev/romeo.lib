@@ -28,7 +28,7 @@ class LedgerGuard extends BaseGuard {
       transport.setDebugMode(true);
     }
     // wait 1 min for result
-    transport.setExchangeTimeout(60000);
+    transport.setExchangeTimeout(5000);
     const hwapp = new AppIota(transport);
 
     await LedgerGuard._setInternalSeed(hwapp, 2);
@@ -102,17 +102,24 @@ class LedgerGuard extends BaseGuard {
   }
 
   async _getGenericAddresses(index, total) {
-    var addresses = [];
-    for (var i = 0; i < total; i++) {
-      const keyIndex = index + i;
-      const address = await this.hwapp.getAddress(keyIndex);
-      if (this.opts.debug) {
-        console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
+    var _this = this;
+    return new Promise(async function(resolve, reject) {
+      try {
+        var addresses = [];
+        for (var i = 0; i < total; i++) {
+          const keyIndex = index + i;
+          const address = await _this.hwapp.getAddress(keyIndex);
+          if (_this.opts.debug) {
+            console.log('getGenericAddress; index=%i, key=%s', keyIndex, address);
+          }
+          addresses.push(address);
+        }
+        resolve(addresses);
       }
-      addresses.push(address);
-    }
-
-    return addresses;
+      catch(e) {
+        reject(e);
+      }
+    });
   }
 
   async _setPageSeed(pageIndex) {

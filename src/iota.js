@@ -260,7 +260,13 @@ function _getNewAddress (api, guard, seedOrPageIndex, index, total, callback, re
       // If total number of addresses to generate is supplied, simply generate
       // and return the list of all addresses
       if (total) {
-        return callback(null, await getter(index, total));
+        try {
+          var res = await getter(index, total);
+          return callback(null, res);
+        }
+        catch (e) {
+          return callback(e, null);
+        }
       }
       //  Case 2: no total provided
       //
