@@ -15,9 +15,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var _require = require('./base'),
     Base = _require.Base;
 
-var crypto = require('../crypto');
 var createQueue = require('../queue');
-var createAPI = require('../iota');
 
 var _require2 = require('../db'),
     Database = _require2.Database;
@@ -26,10 +24,9 @@ var _require3 = require('./pages'),
     Pages = _require3.Pages;
 
 var DEFAULT_OPTIONS = {
-  username: null,
-  password: null,
   syncInterval: 60000,
-  dbPath: 'romeo'
+  dbPath: 'romeo',
+  guard: null
 };
 
 var Romeo = function (_Base) {
@@ -44,16 +41,19 @@ var Romeo = function (_Base) {
 
     var _this = _possibleConstructorReturn(this, (Romeo.__proto__ || Object.getPrototypeOf(Romeo)).call(this, opts));
 
+    if (!_this.opts.guard) throw new Error('No guard provided!');
+    _this.guard = _this.opts.guard;
     _this.ready = false;
     _this.isOnline = 1;
     _this.checkingOnline = false;
     _this.opts = opts;
-    _this.keys = crypto.keys.getKeys(opts.username, opts.password);
-    _this.db = new Database({ path: opts.dbPath, password: _this.keys.password });
-    _this.iota = createAPI({ database: _this.db });
+    _this.db = new Database({
+      path: opts.dbPath,
+      password: _this.guard.getSymmetricKey() });
+    _this.iota = _this.guard.setupIOTA({ database: _this.db });
     _this.queue = createQueue();
     _this.pages = new Pages({
-      keys: _this.keys,
+      guard: _this.guard,
       queue: _this.queue,
       iota: _this.iota,
       db: _this.db,
@@ -89,7 +89,7 @@ var Romeo = function (_Base) {
 
               case 3:
                 _context.next = 5;
-                return this.pages.init();
+                return this.pages.init(false, 10000);
 
               case 5:
                 this.updater = setInterval(function () {
@@ -159,16 +159,18 @@ var Romeo = function (_Base) {
     key: 'asJson',
     value: function asJson() {
       var jobs = this.queue.jobs,
-          keys = this.keys,
           pages = this.pages,
           isOnline = this.isOnline,
           checkingOnline = this.checkingOnline,
           ready = this.ready;
 
       return {
-        keys: keys,
-        jobs: Object.values(jobs),
-        genericJobs: pages.getJobs(),
+        jobs: Object.values(jobs).map(function (j) {
+          return Object.assign({}, j);
+        }),
+        genericJobs: pages.getJobs().map(function (j) {
+          return Object.assign({}, j);
+        }),
         pages: pages.asJson(),
         isOnline: isOnline,
         checkingOnline: checkingOnline,
@@ -227,6 +229,7 @@ var Romeo = function (_Base) {
     value: function () {
       var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
         var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        var onCreate = arguments[1];
 
         var sourcePage, _opts$includeReuse, includeReuse, currentPage, newPage, address, inputs, value;
 
@@ -244,15 +247,17 @@ var Romeo = function (_Base) {
                 _context4.t1 = _context4.sent[0];
                 newPage = _context4.t0.getByAddress.call(_context4.t0, _context4.t1).page;
 
+                onCreate && onCreate(newPage);
+
                 if (currentPage.isSynced()) {
-                  _context4.next = 10;
+                  _context4.next = 11;
                   break;
                 }
 
-                _context4.next = 10;
+                _context4.next = 11;
                 return currentPage.sync();
 
-              case 10:
+              case 11:
                 address = newPage.getCurrentAddress().address;
                 inputs = currentPage.getInputs(includeReuse);
                 value = inputs.reduce(function (t, i) {
@@ -260,22 +265,22 @@ var Romeo = function (_Base) {
                 }, 0);
 
                 if (!(value > 0)) {
-                  _context4.next = 18;
+                  _context4.next = 19;
                   break;
                 }
 
-                _context4.next = 16;
-                return currentPage.sendTransfers([{ address: address, value: value }], inputs, 'Moving funds from the current page to the new one', 'Failed moving funds from the current page to the new one');
+                _context4.next = 17;
+                return currentPage.sendTransfers([{ address: address, value: value }], inputs, 'Moving funds to the new page', 'Failed moving funds!');
 
-              case 16:
-                _context4.next = 18;
-                return newPage.syncTransactions();
+              case 17:
+                currentPage.syncTransactions();
+                newPage.syncTransactions();
 
-              case 18:
+              case 19:
                 this.onChange();
                 return _context4.abrupt('return', newPage);
 
-              case 20:
+              case 21:
               case 'end':
                 return _context4.stop();
             }

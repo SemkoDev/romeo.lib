@@ -33,7 +33,7 @@ class Base {
   }
 
   formatMilliseconds(milliseconds) {
-    var formatted = milliseconds / 1000;
+    let formatted = milliseconds / 1000;
     formatted = formatted.toFixed(3);
     formatted = formatted.toString();
     return formatted.slice(2);

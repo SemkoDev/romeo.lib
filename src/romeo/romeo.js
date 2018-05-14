@@ -1,15 +1,12 @@
 const { Base } = require('./base');
-const crypto = require('../crypto');
 const createQueue = require('../queue');
-const createAPI = require('../iota');
 const { Database } = require('../db');
 const { Pages } = require('./pages');
 
 const DEFAULT_OPTIONS = {
-  username: null,
-  password: null,
   syncInterval: 60000,
-  dbPath: 'romeo'
+  dbPath: 'romeo',
+  guard: null
 };
 
 class Romeo extends Base {
@@ -23,16 +20,19 @@ class Romeo extends Base {
       options
     );
     super(opts);
+    if (!this.opts.guard) throw new Error('No guard provided!');
+    this.guard = this.opts.guard;
     this.ready = false;
     this.isOnline = 1;
     this.checkingOnline = false;
     this.opts = opts;
-    this.keys = crypto.keys.getKeys(opts.username, opts.password);
-    this.db = new Database({ path: opts.dbPath, password: this.keys.password });
-    this.iota = createAPI({ database: this.db });
+    this.db = new Database({
+      path: opts.dbPath,
+      password: this.guard.getSymmetricKey() });
+    this.iota = this.guard.setupIOTA({ database: this.db });
     this.queue = createQueue();
     this.pages = new Pages({
-      keys: this.keys,
+      guard: this.guard,
       queue: this.queue,
       iota: this.iota,
       db: this.db,
@@ -49,7 +49,7 @@ class Romeo extends Base {
     if (restoreString) {
       await this.db.restore(restoreString, true);
     }
-    await this.pages.init();
+    await this.pages.init(false, 10000);
     this.updater = setInterval(
       () => this.pages.syncCurrentPage(),
       this.opts.syncInterval
@@ -77,16 +77,14 @@ class Romeo extends Base {
   asJson() {
     const {
       queue: { jobs },
-      keys,
       pages,
       isOnline,
       checkingOnline,
       ready
     } = this;
     return {
-      keys,
-      jobs: Object.values(jobs),
-      genericJobs: pages.getJobs(),
+      jobs: Object.values(jobs).map(j => Object.assign({}, j)),
+      genericJobs: pages.getJobs().map(j => Object.assign({}, j)),
       pages: pages.asJson(),
       isOnline,
       checkingOnline,
@@ -114,12 +112,13 @@ class Romeo extends Base {
     return await this.db.backup(true);
   }
 
-  async newPage(opts = {}) {
+  async newPage(opts = {}, onCreate) {
     const { sourcePage, includeReuse = false } = opts;
     const currentPage = sourcePage || this.pages.getCurrent();
 
     const newPage = this.pages.getByAddress((await this.pages.getNewPage())[0])
       .page;
+    onCreate && onCreate(newPage);
 
     if (!currentPage.isSynced()) {
       await currentPage.sync();
@@ -131,10 +130,11 @@ class Romeo extends Base {
       await currentPage.sendTransfers(
         [{ address, value }],
         inputs,
-        'Moving funds from the current page to the new one',
-        'Failed moving funds from the current page to the new one'
+        'Moving funds to the new page',
+        'Failed moving funds!'
       );
-      await newPage.syncTransactions();
+      currentPage.syncTransactions();
+      newPage.syncTransactions();
     }
     this.onChange();
     return newPage;

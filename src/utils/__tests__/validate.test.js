@@ -8,7 +8,7 @@ describe('utils.validate', () => {
     expect(errors.length).to.equal(0);
   });
   it('should validate password correctly #2', () => {
-    const { valid, errors } = validate.isPassword('HelloWorld');
+    const { valid, errors } = validate.isPassword('HelloWorldWideWeb');
     expect(valid).to.be.false
     expect(errors.length).to.equal(2);
     expect(errors).to.deep.equal([ 'symbols', 'digits' ]);

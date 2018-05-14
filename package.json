@@ -1,6 +1,6 @@
 {
   "name": "romeo.lib",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "Romeo protocol library for IOTA",
   "main": "dist/index.js",
   "homepage": "https://semkodev.com",
@@ -13,7 +13,7 @@
   "files": ["src", "dist", "README.md", "LICENSE.md"],
   "keywords": ["blockchain", "IOTA", "tangle", "p2p"],
   "watch": {
-    "dist": "{src}/*.js"
+    "dist": "{src,test}/**/*.js"
   },
   "scripts": {
     "test":
@@ -27,8 +27,11 @@
     "watch": "npm-watch"
   },
   "dependencies": {
+    "@ledgerhq/hw-transport-u2f": "^4.7.3",
+    "async": "^2.6.0",
     "better-queue": "^3.8.6",
     "better-queue-memory": "^1.0.2",
+    "hw-app-iota": "git+https://github.com/IOTA-Ledger/hw-app-iota.js.git",
     "iota.lib.js": "^0.4.7",
     "is-online": "^7.0.0",
     "mocha": "^5.0.4",

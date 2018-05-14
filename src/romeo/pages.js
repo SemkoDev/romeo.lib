@@ -1,12 +1,11 @@
 const { BasePage } = require('./base-page');
 const { Page } = require('./page');
-const crypto = require('../crypto');
 
 const DEFAULT_OPTIONS = {
   index: -1,
   isCurrent: true,
   queue: null,
-  keys: null,
+  guard: null,
   iota: null,
   db: null
 };
@@ -21,8 +20,6 @@ class Pages extends BasePage {
       },
       options
     );
-    const { keys: { ledger, password } } = opts;
-    opts.seed = crypto.keys.getSeed(ledger, password);
     super(opts);
     this.pages = this.addresses;
     this.getNewPage = this.getNewAddress;
@@ -42,8 +39,9 @@ class Pages extends BasePage {
   }
 
   applyAddresses(addresses) {
-    const { keys: { password }, queue, iota, db } = this.opts;
-    const startIndex = Object.keys(this.pages).length;
+    const { queue, iota, db, guard } = this.opts;
+    const startIndex = Object.keys(this.pages)
+      .filter(e => !addresses.includes(e)).length;
     let currentPage = null;
     const otherPages = [];
 
@@ -56,20 +54,19 @@ class Pages extends BasePage {
         const { onChange } = this;
         const index = keyIndex + startIndex;
         const isCurrent = keyIndex === addresses.length - 1;
-        const seed = crypto.keys.getSeed(address, password);
         const page = new Page({
           db,
           queue,
           iota,
           index,
-          seed,
+          guard,
           isCurrent,
           onChange
         });
 
         this.pages[address] = {
           address,
-          seed,
+          seed: guard.getPageSeed(index),
           keyIndex: index,
           page
         };
@@ -80,14 +77,14 @@ class Pages extends BasePage {
         }
       }
     });
-    if (currentPage) {
-      currentPage
-        .init(false, 60)
-        .then(() => Promise.all(otherPages.map(p => p.init())));
-    }
     Object.values(this.pages)
       .sort((a, b) => b.keyIndex - a.keyIndex)[0]
       .page.setCurrent(true);
+    if (currentPage) {
+      currentPage
+        .init(true, 6000)
+        .then(() => Promise.all(otherPages.map(p => p.init())));
+    }
     this.onChange();
   }
 
