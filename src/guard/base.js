@@ -185,9 +185,7 @@ class BaseGuard {
         { page: pageIndex, type: 'GET_SIGNED_TRANSACTIONS' }
       );
       job.on('finish', resolve);
-      job.on('failed', (e) => {
-        console.error('sign tx failed!', reject);
-      });
+      job.on('failed', reject);
     });
   }
 

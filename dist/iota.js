@@ -348,6 +348,8 @@ function _getNewAddress(api, guard, seedOrPageIndex, index, total, callback) {
                       });
                     }
                   });
+                }).catch(function (err) {
+                  callback(err);
                 });
               }, function (address, isUsed) {
                 return isUsed;
@@ -411,9 +413,11 @@ function _sendTransfer(api, guard, seedOrPageIndex, depth, minWeightMagnitude, t
 
             _context2.next = 11;
             return function () {
-              return new Promise(function (resolve) {
+              return new Promise(function (resolve, reject) {
                 _getNewAddress(api, guard, seedOrPageIndex, 0, null, function (error, address, addressIndex) {
-                  if (error) throw error;
+                  if (error) {
+                    return reject(error);
+                  };
                   index = addressIndex;
                   resolve(address);
                 }, false);

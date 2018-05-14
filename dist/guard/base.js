@@ -357,9 +357,7 @@ var BaseGuard = function () {
                 return _context6.abrupt('return', new Promise(function (resolve, reject) {
                   var job = _this4.queue.addJob(promiseFactory, priority, { page: pageIndex, type: 'GET_SIGNED_TRANSACTIONS' });
                   job.on('finish', resolve);
-                  job.on('failed', function (e) {
-                    console.error('sign tx failed!', reject);
-                  });
+                  job.on('failed', reject);
                 }));
 
               case 2:

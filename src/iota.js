@@ -303,6 +303,8 @@ function _getNewAddress (api, guard, seedOrPageIndex, index, total, callback, re
                 })
               }
             })
+          }).catch((err) => {
+            callback(err)
           });
 
         }, function (address, isUsed) {
@@ -333,11 +335,13 @@ function _sendTransfer (api, guard, seedOrPageIndex, depth, minWeightMagnitude, 
         return callback(new Error('No inputs for guard send provided!'));
       const remainder = totalValue > 0
         ? (options.address ||
-          await (() => new Promise(resolve => {
+          await (() => new Promise((resolve, reject) => {
             _getNewAddress(
               api, guard, seedOrPageIndex, 0, null,
               (error, address, addressIndex) => {
-                if (error) throw error;
+                if (error) {
+                  return reject(error);
+                };
                 index = addressIndex
                 resolve(address);
               },

@@ -200,29 +200,40 @@ var BasePage = function (_Base) {
                         return _this4.restoreAddresses(addresses, 'Attaching new addresses', 'Could not attach new addresses');
 
                       case 5:
-                        _context3.next = 7;
+                        _context3.prev = 5;
+                        _context3.next = 8;
                         return _this4.syncAddresses(index, false, Object.keys(_this4.addresses).length);
 
-                      case 7:
-                        _context3.t0 = callback;
+                      case 8:
+                        _context3.next = 13;
+                        break;
 
-                        if (!_context3.t0) {
-                          _context3.next = 11;
+                      case 10:
+                        _context3.prev = 10;
+                        _context3.t0 = _context3['catch'](5);
+
+                        reject(_context3.t0);
+
+                      case 13:
+                        _context3.t1 = callback;
+
+                        if (!_context3.t1) {
+                          _context3.next = 17;
                           break;
                         }
 
-                        _context3.next = 11;
+                        _context3.next = 17;
                         return callback(addresses);
 
-                      case 11:
+                      case 17:
                         resolve(addresses);
 
-                      case 12:
+                      case 18:
                       case 'end':
                         return _context3.stop();
                     }
                   }
-                }, _callee3, _this4);
+                }, _callee3, _this4, [[5, 10]]);
               }));
 
               return function (_x5, _x6) {

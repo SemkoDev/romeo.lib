@@ -99,10 +99,15 @@ class BasePage extends Base {
                 `Attaching new addresses`,
                 'Could not attach new addresses'
               );
-              await this.syncAddresses(
-                index, false,
-                Object.keys(this.addresses).length
-              );
+              try {
+                await this.syncAddresses(
+                  index, false,
+                  Object.keys(this.addresses).length
+                );
+              }
+              catch (e) {
+                reject(e);
+              }
               callback && (await callback(addresses));
               resolve(addresses);
             }
