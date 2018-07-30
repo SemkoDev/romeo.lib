@@ -6,7 +6,7 @@ var value = function value(key, defaultValue) {
 
 var IOTA_BALANCE_TRESHOLD = value('IOTA_BALANCE_TRESHOLD', 100);
 
-var IOTA_API_ENDPOINT = value('IOTA_API_ENDPOINT', 'https://field.carriota.com');
+var IOTA_API_ENDPOINT = value('IOTA_API_ENDPOINT', 'https://field.deviota.com');
 
 var IOTA_DEPTH = value('IOTA_DEPTH', 4);
 

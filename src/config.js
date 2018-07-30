@@ -5,7 +5,7 @@ const IOTA_BALANCE_TRESHOLD = value('IOTA_BALANCE_TRESHOLD', 100);
 
 const IOTA_API_ENDPOINT = value(
   'IOTA_API_ENDPOINT',
-  'https://field.carriota.com'
+  'https://field.deviota.com'
 );
 
 const IOTA_DEPTH = value('IOTA_DEPTH', 4);
