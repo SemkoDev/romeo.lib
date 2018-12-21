@@ -18,16 +18,6 @@ npm install romeo.lib
 
 This software is experimental. Use at your own risk!
 
-## Contributing
-
-### Donations
-
-**Donations always welcome**:
-
-```
-IYUIUCFNGOEEQHT9CQU9VYJVOJMQI9VYTQGQLTBAKTFIPWWRBFEV9TJWUZU9EYEFPM9VB9QYXTSMCDKMDABASVXPPX
-```
-
 ## Authors
 
 * **Roman Semko** - _SemkoDev_ - (https://github.com/romansemko)
